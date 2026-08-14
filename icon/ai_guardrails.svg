@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="ai_guardrails icon">
+  <defs>
+    <linearGradient id="shield" x1="96" y1="72" x2="416" y2="452" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4338CA"/>
+      <stop offset="1" stop-color="#0D9488"/>
+    </linearGradient>
+  </defs>
+
+  <!-- shield body: solid gradient fill so it reads on light and dark -->
+  <path d="M136 96 L376 96 Q396 96 396 116 L396 236 C396 330 340 398 256 446 C172 398 116 330 116 236 L116 116 Q116 96 136 96 Z"
+        fill="url(#shield)" stroke="#E0E7FF" stroke-opacity="0.25" stroke-width="4"/>
+
+  <!-- neural / circuit accent (subtle) -->
+  <g stroke="#FFFFFF" stroke-opacity="0.42" stroke-width="4" stroke-linecap="round">
+    <line x1="256" y1="138" x2="196" y2="178"/>
+    <line x1="256" y1="138" x2="316" y2="178"/>
+    <line x1="196" y1="178" x2="316" y2="178"/>
+  </g>
+  <g fill="#FFFFFF" fill-opacity="0.9">
+    <circle cx="256" cy="138" r="9"/>
+    <circle cx="196" cy="178" r="9"/>
+    <circle cx="316" cy="178" r="9"/>
+  </g>
+
+  <!-- safe check -->
+  <path d="M198 268 L240 312 L326 214" fill="none" stroke="#FFFFFF"
+        stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

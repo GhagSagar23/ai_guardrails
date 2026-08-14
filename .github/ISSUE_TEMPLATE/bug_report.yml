@@ -1,0 +1,88 @@
+name: Bug report
+description: Report incorrect scanner behaviour (false positive, false negative, crash).
+title: "[bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please redact any real PII/secrets from the
+        fields below — this is a PII/secret-detection library, so use fake data.
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: The `ai_guardrails` version from your `pubspec.yaml` / `pubspec.lock`.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: scanner
+    attributes:
+      label: Which scanner
+      description: The scanner the bug is in (or "not scanner-specific").
+      options:
+        - PiiScanner
+        - SecretScanner
+        - PromptInjectionScanner
+        - BannedTopicScanner
+        - BannedPatternScanner
+        - TokenLimitScanner
+        - InvisibleTextScanner
+        - SchemaValidator
+        - AiGuard (orchestrator)
+        - Not scanner-specific
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest Dart snippet that reproduces the bug.
+      render: dart
+      placeholder: |
+        import 'package:ai_guardrails/ai_guardrails.dart';
+
+        void main() {
+          final r = PiiScanner().scan('...');
+          print(r.findings);
+        }
+    validations:
+      required: true
+  - type: textarea
+    id: sample_input
+    attributes:
+      label: Sample input (PII REDACTED)
+      description: The exact input string. Replace any real PII/secrets with fake values.
+      placeholder: "Contact me at user@example.com"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Dart/Flutter version + platform
+      description: Output of `dart --version` (or `flutter --version`) plus OS/platform.
+      placeholder: "Dart 3.5.0, macOS 15 arm64"
+    validations:
+      required: true
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Before you submit
+      options:
+        - label: I have read CONTRIBUTING and understand a fix requires an accepted issue before a PR.
+          required: true
+        - label: I searched existing issues and this is not a duplicate.
+          required: true

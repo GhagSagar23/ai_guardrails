@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & discussion
+    url: https://github.com/GhagSagar23/ai_guardrails/discussions
+    about: Ask usage questions or discuss ideas here — please don't open an issue for questions.
+  - name: README & usage docs
+    url: https://github.com/GhagSagar23/ai_guardrails#readme
+    about: Read the README before filing — it covers setup and every scanner's options.

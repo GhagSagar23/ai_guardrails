@@ -1,0 +1,14 @@
+# Dart / Pub
+.dart_tool/
+.packages
+build/
+doc/api/
+
+# Package lockfile is not committed for libraries
+pubspec.lock
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
