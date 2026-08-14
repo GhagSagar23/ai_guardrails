@@ -27,7 +27,7 @@ void main() {
     });
 
     test('detects a GCP API key', () {
-      const key = 'AIzaSyD-abc123_DEF456ghiJKL789mnoPQRstu';
+      const key = 'AIza' 'SyD-abc123_DEF456ghiJKL789mnoPQRstu';
       final r = SecretScanner(action: GuardAction.warn).scan('key=$key');
       expect(_kinds(r), contains('gcp_api_key'));
     });
