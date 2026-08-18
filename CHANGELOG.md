@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- **`GuardLog`** — structured, JSON-serializable audit record of every scan.
+  Contains scanner chain results, findings, text hashes (never raw text), and
+  timestamps. Wire to any logging backend via `AiGuard.onScan` callback.
+- **`GuardMetrics`** — per-run metrics snapshot: total/input/output duration,
+  block status, finding counts, per-scanner breakdown. Wire to dashboards via
+  `AiGuard.onMetrics` callback.
+- **`AiGuard.fromConfig()`** — build a complete `AiGuard` from a
+  `Map<String, dynamic>` (JSON). Declare scanner chains, thresholds, and
+  actions without code changes. Deploy policy updates without recompilation.
+  Supports all 13 scanner types.
+
 ## 0.4.0
 
 - **`StreamingAiGuard`** — streaming wrapper for chunked LLM responses. Buffers

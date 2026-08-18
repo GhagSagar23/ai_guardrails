@@ -624,9 +624,11 @@ process boundary. This is a design invariant, not a configuration option.
 
 **Shipped (0.4):** `StreamingAiGuard`, `GroundingScanner`.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — enterprise
-observability, international PII, provider wrappers, multi-turn context, and
-the policy platform.
+**Shipped (0.5):** `GuardLog` audit trail, `GuardMetrics` hooks,
+`AiGuard.fromConfig()` policy-as-config.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — international
+PII, provider wrappers, multi-turn context, and the policy platform.
 
 ## Resources
 

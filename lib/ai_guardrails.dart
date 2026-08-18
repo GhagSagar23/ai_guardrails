@@ -7,6 +7,8 @@ library;
 
 export 'src/scanner.dart';
 export 'src/ai_guard.dart';
+export 'src/guard_log.dart';
+export 'src/guard_metrics.dart';
 export 'src/data/pii_patterns.dart';
 export 'src/scanners/pii_scanner.dart';
 export 'src/scanners/secret_scanner.dart';

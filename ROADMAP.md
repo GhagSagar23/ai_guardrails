@@ -40,36 +40,11 @@ blocks on a later one. Contributions welcome on any item; see
 - `GroundingScanner` — keyword-overlap grounding checker against source context
 - `StageRun` / `AiGuard.runInputStage()` / `runOutputStage()` — public stage-level API
 
----
+### 0.5 — Enterprise observability
 
-## Phase 0.5 — Enterprise observability
-
-The adoption gate for production apps: prove what happened, measure how it's working.
-
-### Audit trail (`GuardLog`)
-
-- [ ] Structured, JSON-serializable audit record of every scan
-- [ ] Fields: timestamp, scanner chain, findings, actions taken, before/after text hashes (never raw text — compliance)
-- [ ] `AiGuard.onScan` callback that emits `GuardLog` entries
-- [ ] Users wire to any logging backend without the package depending on one
-
-### Metrics hooks
-
-- [ ] `AiGuard.onMetrics` callback: latency, findings count, block rate per scanner
-- [ ] Zero-dep — callback signature only, no Prometheus/Datadog dependency
-- [ ] Enough for users to build dashboards from their own infra
-
-### Policy-as-config
-
-- [ ] `AiGuard.fromConfig(Map<String, dynamic> config)` factory
-- [ ] JSON format via `dart:convert` — preserves the zero-dep promise
-- [ ] Users who want YAML parse it themselves and pass the resulting `Map`
-- [ ] Declare scanner chains, thresholds, and actions without code changes
-- [ ] Deploy policy updates without recompilation
-
-**Design decision:** Config format is JSON, not YAML. YAML would require a parser
-dependency, which contradicts the package's core identity. The factory accepts any
-`Map<String, dynamic>` — the serialization format is the caller's problem.
+- `GuardLog` — structured, JSON-serializable audit record (text hashes, never raw text)
+- `GuardMetrics` — per-run timing and finding-count snapshot via `onMetrics` callback
+- `AiGuard.fromConfig()` — build scanner chains from JSON config without code changes
 
 ---
 
