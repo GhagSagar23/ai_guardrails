@@ -10,9 +10,12 @@
 
 <p align="center">
   <a href="https://pub.dev/packages/ai_guardrails"><img src="https://img.shields.io/pub/v/ai_guardrails.svg?label=pub&color=0175C2" alt="pub version" /></a>
+  <a href="https://pub.dev/packages/ai_guardrails/score"><img src="https://img.shields.io/pub/points/ai_guardrails?color=0175C2&label=pub%20points" alt="pub points" /></a>
   <a href="https://github.com/GhagSagar23/ai_guardrails/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/GhagSagar23/ai_guardrails/ci.yml?branch=master&label=CI" alt="CI status" /></a>
+  <a href="https://pub.dev/documentation/ai_guardrails/latest/"><img src="https://img.shields.io/badge/docs-pub.dev-0175C2.svg" alt="API docs" /></a>
   <a href="https://github.com/GhagSagar23/ai_guardrails/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0" /></a>
   <img src="https://img.shields.io/badge/platform-Dart%20%7C%20Flutter-0175C2.svg?logo=dart" alt="Pure Dart · all platforms" />
+  <img src="https://img.shields.io/badge/style-lints-0175C2.svg" alt="style: lints" />
 </p>
 
 ---
@@ -32,6 +35,38 @@ cheap enough to run on the UI isolate.
   vendor's logs.
 - **Offline & cheap** — every scanner here is regex/heuristic based, zero dependencies,
   works with no connectivity and adds no per-token cost.
+
+### How is this different?
+
+Python has [NeMo Guardrails](https://github.com/NVIDIA/NeMo-Guardrails),
+[Guardrails AI](https://github.com/guardrails-ai/guardrails), and
+[LLM Guard](https://github.com/protectai/llm-guard). Before `ai_guardrails`,
+Dart and Flutter had **nothing** — zero pub.dev packages for LLM input/output safety.
+
+Those Python libraries are server-side, often ML-backed, and pull in heavy dependencies.
+`ai_guardrails` takes a different approach: pure heuristic scanners, zero runtime
+dependencies, synchronous execution, runs on any Dart platform including mobile and web.
+The trade-off is intentional — regex/heuristic scanners catch the *shape* of dangerous
+data, not its meaning, but they do it in microseconds with no network and no model
+inference cost.
+
+### Use cases
+
+- **Chatbots & conversational AI** — strip PII from user messages before they reach your
+  LLM provider, block prompt injection attempts
+- **RAG applications** — validate that model output is grounded in your source documents
+  with `GroundingScanner`
+- **Code generation apps** — catch dangerous generated code (`rm -rf`, `DROP TABLE`,
+  `eval()`) before it reaches execution with `CodeExecutionScanner`
+- **Streaming completions** — scan token-by-token output in real time with
+  `StreamingAiGuard`, terminate mid-stream on violations
+- **Data loss prevention** — detect and block API keys, JWTs, private keys, and other
+  secrets in both prompts and responses
+
+## Requirements
+
+- Dart SDK `^3.5.0` (Flutter 3.24+)
+- Zero runtime dependencies
 
 ## Install
 
@@ -58,6 +93,12 @@ flowchart LR
 Redacting scanners **chain**: each scanner sees the previous one's transformed text, and
 the fully-sanitised string is what reaches your `llmCall`. The pipeline stops at the first
 scanner that blocks — the LLM is never called if an input scanner blocks.
+
+The `Scanner` contract is deliberately **pure and synchronous** — no I/O, no async, no
+mutable shared state. This keeps every scanner deterministic, testable in isolation, and
+cheap enough to run on the UI isolate without blocking frames. `AiGuard.run()` is the only
+async surface (because your LLM call is async). `StreamingAiGuard` adds a `Stream`-based
+async layer for chunked responses, but individual scanners remain sync underneath.
 
 ## Quickstart
 
@@ -105,6 +146,44 @@ Future<void> ask(String userText) async {
 
 Need just one side? Use `guard.scanInput(text)` or `guard.scanOutput(text)` for the
 per-scanner `List<ScanResult>` without calling an LLM.
+
+See [`example/ai_guardrails_example.dart`](example/ai_guardrails_example.dart) for a
+full runnable example with two prompts (benign + injection).
+
+## Integration with LLM providers
+
+`ai_guardrails` is provider-agnostic — it wraps any `Future<String> Function(String)`
+as your LLM call. Here's how it looks with `google_generative_ai`:
+
+```dart
+import 'package:ai_guardrails/ai_guardrails.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+
+final model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
+
+final guard = AiGuard(
+  inputScanners: [
+    PiiScanner(action: GuardAction.redact),
+    SecretScanner(),
+    PromptInjectionScanner(),
+  ],
+  outputScanners: [
+    GroundingScanner(context: mySourceDocs),
+    RepetitionScanner(),
+  ],
+);
+
+final outcome = await guard.run(
+  input: userMessage,
+  llmCall: (sanitized) async {
+    final response = await model.generateContent([Content.text(sanitized)]);
+    return response.text ?? '';
+  },
+);
+```
+
+The same pattern works with any Dart LLM client: `anthropic_sdk_dart`,
+`langchain_dart`, `ollama_dart`, or a plain `http.Client` calling your own gateway.
 
 ## PII round-trip
 
@@ -461,6 +540,28 @@ Scanners see each segment independently — cross-segment patterns are not detec
 Use `AiGuard` for full-output scanning (e.g. `SchemaValidator`) after the stream
 completes when you need whole-response coverage.
 
+## Performance
+
+All scanners are synchronous regex/string work on a single isolate. The full 7-scanner
+input pipeline processes ~1.25 KB prompts in **~558 microseconds** (~2 MB/s) on Apple
+Silicon. Individual scanners range from ~2 us (`BannedPatternScanner`) to ~404 us
+(`PiiScanner` with redaction, which dominates the pipeline).
+
+| Scanner | Mean per scan |
+| --- | ---: |
+| BannedPatternScanner | 1.7 us |
+| BannedTopicScanner | 2.8 us |
+| SchemaValidator | 3.9 us |
+| SecretScanner | 7.8 us |
+| TokenLimitScanner | 43 us |
+| PromptInjectionScanner | 98 us |
+| InvisibleTextScanner | 92 us |
+| PiiScanner (redact) | 404 us |
+| **Full pipeline (7 scanners)** | **558 us** |
+
+Full methodology and throughput numbers in [`BENCHMARK.md`](BENCHMARK.md). ReDoS and
+memory analysis in [`PERFORMANCE-AUDIT.md`](PERFORMANCE-AUDIT.md).
+
 ## Accuracy & limitations
 
 These scanners are **regex/heuristic and context-free** — they match the *shape* of data,
@@ -488,6 +589,31 @@ unicode-domain emails. These are scope decisions, not defects; if you need a for
 Treat `ai_guardrails` as a fast **first line of defense**, not a compliance guarantee —
 layer server-side checks for regulated data.
 
+## FAQ
+
+**Q: I'm getting false positives on order IDs / tracking numbers.**
+Use `types` to limit `PiiScanner` to only the PII types you care about, or switch to
+`GuardAction.warn` and review findings before acting on them.
+
+**Q: Can I use this with streaming APIs like Gemini or OpenAI?**
+Yes. `StreamingAiGuard` wraps any `Stream<String>` and scans per-segment. See the
+[Streaming](#streaming) section.
+
+**Q: Does this package phone home or collect telemetry?**
+No. Zero network calls, zero telemetry, zero runtime dependencies. Everything runs
+on-device. This is by design, not by accident.
+
+**Q: Why are scanners synchronous instead of async?**
+So they can run on the UI isolate without blocking frames, compose deterministically,
+and stay testable without async machinery. If a scanner needed I/O it wouldn't be
+"on-device" anymore.
+
+## Privacy & telemetry
+
+This package makes **zero network calls** and collects **no telemetry**. Every scanner
+runs entirely on-device using only synchronous string operations. No data leaves the
+process boundary. This is a design invariant, not a configuration option.
+
 ## Roadmap
 
 **Shipped (0.1):** 8 heuristic scanners, `AiGuard` orchestrator, zero dependencies.
@@ -502,16 +628,24 @@ See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — enterprise
 observability, international PII, provider wrappers, multi-turn context, and
 the policy platform.
 
-## Benchmarks
+## Resources
 
-Measured throughput and latency live in [`BENCHMARK.md`](BENCHMARK.md); a ReDoS and
-memory review lives in [`PERFORMANCE-AUDIT.md`](PERFORMANCE-AUDIT.md).
+- [**API documentation**](https://pub.dev/documentation/ai_guardrails/latest/) — full
+  dartdoc reference on pub.dev
+- [**BENCHMARK.md**](BENCHMARK.md) — measured throughput and latency for every scanner
+- [**PERFORMANCE-AUDIT.md**](PERFORMANCE-AUDIT.md) — ReDoS safety and memory analysis
+- [**ROADMAP.md**](ROADMAP.md) — phased plan through 0.9 with contribution targets
+- [**CONTRIBUTING.md**](CONTRIBUTING.md) — issue-first contribution workflow
+- [**SECURITY.md**](SECURITY.md) — vulnerability reporting and security scope
 
 ## Contributing
 
 Contributions are **issue-first**: please
 [open a GitHub issue](https://github.com/GhagSagar23/ai_guardrails/issues) to discuss a
 change before sending a PR. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for details.
+
+Self-contained items (new PII locale, new scanner) are ideal first contributions.
+Cross-cutting items (streaming, policy engine) benefit from design discussion first.
 
 ## License
 
