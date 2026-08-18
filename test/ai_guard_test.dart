@@ -186,5 +186,75 @@ void main() {
           containsAll(['inf.a', 'outf.b']));
       expect(outcome.allFindings, hasLength(2));
     });
+
+    test('PII round-trip: output is rehydrated with original values', () async {
+      final redactor = _FakeScanner(
+        'redact',
+        const {ScanStage.input},
+        (text, stage) => ScanResult(
+          scanner: 'redact',
+          passed: true,
+          text: text.replaceAll('alice@example.com', '[EMAIL_1]'),
+          score: 0.5,
+          findings: [Finding(type: 'pii.email', match: 'alice@example.com')],
+          redactionMap: const {'[EMAIL_1]': 'alice@example.com'},
+        ),
+      );
+      final guard = AiGuard(inputScanners: [redactor]);
+      final outcome = await guard.run(
+        input: 'contact alice@example.com please',
+        llmCall: (s) async => 'Sure, I emailed [EMAIL_1] for you.',
+      );
+      expect(outcome.blocked, isFalse);
+      expect(outcome.output, 'Sure, I emailed alice@example.com for you.');
+      expect(outcome.rawOutput, 'Sure, I emailed [EMAIL_1] for you.');
+      expect(outcome.piiMap, {'[EMAIL_1]': 'alice@example.com'});
+      expect(outcome.input, 'contact [EMAIL_1] please');
+    });
+
+    test('piiMap is empty when no redaction occurred', () async {
+      final guard = AiGuard();
+      final outcome = await guard.run(
+        input: 'hi',
+        llmCall: (s) async => 'hello',
+      );
+      expect(outcome.piiMap, isEmpty);
+      expect(outcome.output, 'hello');
+      expect(outcome.rawOutput, 'hello');
+    });
+
+    test('multiple redaction maps merge across scanners', () async {
+      final s1 = _FakeScanner(
+        's1',
+        const {ScanStage.input},
+        (text, stage) => ScanResult(
+          scanner: 's1',
+          passed: true,
+          text: text.replaceAll('secret1', '[S1]'),
+          score: 0.5,
+          findings: [Finding(type: 's1.hit')],
+          redactionMap: const {'[S1]': 'secret1'},
+        ),
+      );
+      final s2 = _FakeScanner(
+        's2',
+        const {ScanStage.input},
+        (text, stage) => ScanResult(
+          scanner: 's2',
+          passed: true,
+          text: text.replaceAll('secret2', '[S2]'),
+          score: 0.5,
+          findings: [Finding(type: 's2.hit')],
+          redactionMap: const {'[S2]': 'secret2'},
+        ),
+      );
+      final guard = AiGuard(inputScanners: [s1, s2]);
+      final outcome = await guard.run(
+        input: 'secret1 and secret2',
+        llmCall: (s) async => 'got [S1] and [S2]',
+      );
+      expect(outcome.output, 'got secret1 and secret2');
+      expect(outcome.piiMap, {'[S1]': 'secret1', '[S2]': 'secret2'});
+    });
   });
 }

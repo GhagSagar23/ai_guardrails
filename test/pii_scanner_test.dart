@@ -81,7 +81,7 @@ void main() {
     test('redact: default placeholder, passed=true, modest score', () {
       final r = PiiScanner(action: GuardAction.redact).scan(emailText);
       expect(r.passed, isTrue);
-      expect(r.text, 'email [EMAIL] now');
+      expect(r.text, 'email [EMAIL_1] now');
       expect(r.score, 0.5);
     });
 
@@ -113,7 +113,7 @@ void main() {
     test('credit_card redacts with [CREDIT_CARD] and skips Luhn failures', () {
       final r = PiiScanner(action: GuardAction.redact, types: {'credit_card'})
           .scan('ok 4111 1111 1111 1111 bad 4111 1111 1111 1112');
-      expect(r.text, 'ok [CREDIT_CARD] bad 4111 1111 1111 1112');
+      expect(r.text, 'ok [CREDIT_CARD_1] bad 4111 1111 1111 1112');
     });
   });
 
@@ -139,9 +139,47 @@ void main() {
 
     test('redacted text contains exactly one placeholder per finding', () {
       final r = PiiScanner().scan('num 4111 1111 1111 1111');
-      expect(r.text, 'num [CREDIT_CARD]');
-      expect('[CREDIT_CARD]'.allMatches(r.text).length, r.findings.length);
-      expect(r.text.contains('[AADHAAR]'), isFalse);
+      expect(r.text, 'num [CREDIT_CARD_1]');
+      expect('[CREDIT_CARD_1]'.allMatches(r.text).length, r.findings.length);
+      expect(r.text.contains('[AADHAAR'), isFalse);
+    });
+  });
+
+  group('redactionMap', () {
+    test('redact populates map with numbered placeholders', () {
+      final r = PiiScanner(action: GuardAction.redact, types: {'email'})
+          .scan('a@b.com and c@d.com');
+      expect(r.redactionMap, {
+        '[EMAIL_1]': 'a@b.com',
+        '[EMAIL_2]': 'c@d.com',
+      });
+      expect(r.text, '[EMAIL_1] and [EMAIL_2]');
+    });
+
+    test('hash populates map with hash tokens', () {
+      final r = PiiScanner(action: GuardAction.hash, types: {'email'})
+          .scan('a@b.com');
+      expect(r.redactionMap.length, 1);
+      final key = r.redactionMap.keys.single;
+      expect(key, matches(RegExp(r'\[EMAIL:[0-9a-f]{6}\]')));
+      expect(r.redactionMap[key], 'a@b.com');
+    });
+
+    test('block and warn produce empty map', () {
+      for (final action in [GuardAction.block, GuardAction.warn]) {
+        final r = PiiScanner(action: action, types: {'email'})
+            .scan('a@b.com');
+        expect(r.redactionMap, isEmpty);
+      }
+    });
+
+    test('different PII types get independent counters', () {
+      final r = PiiScanner(action: GuardAction.redact).scan(
+        'a@b.com 123-45-6789 c@d.com',
+      );
+      expect(r.redactionMap.containsKey('[EMAIL_1]'), isTrue);
+      expect(r.redactionMap.containsKey('[EMAIL_2]'), isTrue);
+      expect(r.redactionMap.containsKey('[SSN_1]'), isTrue);
     });
   });
 

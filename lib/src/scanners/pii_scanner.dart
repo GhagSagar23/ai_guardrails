@@ -82,13 +82,15 @@ class PiiScanner implements Scanner {
       case GuardAction.redact:
       case GuardAction.hash:
         final hash = action == GuardAction.hash;
+        final (transformed, rmap) = _transform(text, findings, hash);
         return ScanResult(
           scanner: name,
           passed: true,
-          text: _transform(text, findings, hash),
+          text: transformed,
           score: 0.5,
           findings: findings,
           reason: hash ? 'PII hashed' : 'PII redacted',
+          redactionMap: rmap,
         );
     }
   }
@@ -113,27 +115,32 @@ class PiiScanner implements Scanner {
   }
 
   /// Rebuilds [text] with each resolved [findings] span replaced by its
-  /// placeholder. Offset-based so the output always matches the reported
-  /// findings — no second regex pass, no phantom or missed redactions.
-  String _transform(String text, List<Finding> findings, bool hash) {
+  /// placeholder, and returns the placeholder→original map for rehydration.
+  (String, Map<String, String>) _transform(
+      String text, List<Finding> findings, bool hash) {
     final buf = StringBuffer();
+    final map = <String, String>{};
+    final counts = <String, int>{};
     var cursor = 0;
     for (final f in findings) {
       buf.write(text.substring(cursor, f.start));
       final bare = f.type.startsWith('pii.') ? f.type.substring(4) : f.type;
-      buf.write(_placeholderFor(bare, f.match ?? '', hash));
+      final idx = counts[bare] = (counts[bare] ?? 0) + 1;
+      final token = _placeholderFor(bare, f.match ?? '', hash, idx);
+      map[token] = f.match ?? '';
+      buf.write(token);
       cursor = f.end;
     }
     buf.write(text.substring(cursor));
-    return buf.toString();
+    return (buf.toString(), map);
   }
 
-  String _placeholderFor(String type, String match, bool hash) {
+  String _placeholderFor(String type, String match, bool hash, int index) {
     if (hash) return '[${type.toUpperCase()}:${_fnv6(match)}]';
     if (placeholder != null) {
       return placeholder!(Finding(type: 'pii.$type', match: match));
     }
-    return '[${type.toUpperCase()}]';
+    return '[${type.toUpperCase()}_$index]';
   }
 
   /// 24-bit FNV-1a of [s] as 6 hex chars — a stable, non-reversible token.

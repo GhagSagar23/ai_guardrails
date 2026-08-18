@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0
+
+- **PII round-trip rehydration** — `AiGuard.run()` now automatically restores
+  redacted PII in the LLM output. Placeholders like `[EMAIL_1]` in the model
+  response are replaced with the original values so `outcome.output` reads
+  naturally. `outcome.rawOutput` preserves the pre-rehydration text;
+  `outcome.piiMap` exposes the placeholder→original map for manual control.
+- **Numbered redaction placeholders** — `PiiScanner` now produces unique tokens
+  per occurrence (`[EMAIL_1]`, `[EMAIL_2]`) instead of a shared `[EMAIL]`.
+  Hash-mode placeholders (`[EMAIL:a1b2c3]`) are unchanged (already unique).
+- **`ScanResult.redactionMap`** — any scanner that transforms text can now
+  populate a `Map<String, String>` of token→original. `AiGuard` merges maps
+  across chained scanners.
+- **`RepetitionScanner`** — detects degenerate model output (looping / repeated
+  phrases) via word-level n-gram frequency analysis. Configurable n-gram size
+  and threshold; output-stage only.
+
 ## 0.1.0
 
 Initial release.

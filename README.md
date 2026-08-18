@@ -106,6 +106,32 @@ Future<void> ask(String userText) async {
 Need just one side? Use `guard.scanInput(text)` or `guard.scanOutput(text)` for the
 per-scanner `List<ScanResult>` without calling an LLM.
 
+## PII round-trip
+
+When `PiiScanner` redacts input, the LLM sees placeholders like `[EMAIL_1]`.
+If the model echoes those placeholders in its response, `AiGuard` automatically
+**rehydrates** them — `outcome.output` comes back with the original PII restored:
+
+```dart
+final guard = AiGuard(
+  inputScanners: [PiiScanner(action: GuardAction.redact)],
+);
+
+final outcome = await guard.run(
+  input: 'Email alice@work.com and bob@work.com about the release.',
+  llmCall: (sanitized) => myLlm.complete(sanitized),
+  // sanitized = "Email [EMAIL_1] and [EMAIL_2] about the release."
+);
+
+print(outcome.output);    // "I've emailed alice@work.com and bob@work.com."
+print(outcome.rawOutput); // "I've emailed [EMAIL_1] and [EMAIL_2]."
+print(outcome.piiMap);    // {[EMAIL_1]: alice@work.com, [EMAIL_2]: bob@work.com}
+```
+
+Each PII type gets an independent counter (`[EMAIL_1]`, `[SSN_1]`), so multiple
+occurrences of the same type are distinguishable. Hash-mode placeholders
+(`[EMAIL:a1b2c3]`) are already unique and work the same way.
+
 `AiGuard` is **fail-closed by default** (`failClosed: true`): if a scanner throws, the
 request is blocked rather than silently passed. Set `failClosed: false` to skip a
 throwing scanner instead.
@@ -122,6 +148,7 @@ throwing scanner instead.
 | **`BannedTopicScanner`** | input · output | `block` | word-boundary matches of your topic phrases |
 | **`BannedPatternScanner`** | input · output | `block` | any `Pattern` (regex or literal) you supply |
 | **`TokenLimitScanner`** | input | `block` | prompts over an approximate token budget |
+| **`RepetitionScanner`** | output | `block` | degenerate model output (looping / repeated phrases) |
 | **`SchemaValidator`** | output | `block` | output that isn't valid JSON matching a minimal JSON-Schema |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
@@ -251,6 +278,23 @@ Uses a simple word+punctuation-run tokenizer for a fast approximation. Only `blo
 </details>
 
 <details>
+<summary><strong>RepetitionScanner</strong> — detect model output looping</summary>
+
+```dart
+final rep = RepetitionScanner(threshold: 0.3); // block when ≥30% n-gram repetition
+
+final r = rep.scan('buy now buy now buy now buy now buy now buy now');
+print(r.passed); // false
+print(r.score);  // 0.0 .. 1.0, repetition ratio
+```
+
+Measures word-level trigram frequency. A high ratio of duplicate n-grams relative to
+total positions signals the model is stuck in a loop. Configurable `ngramSize` (default 3)
+and `threshold` (default 0.3). Output-stage only.
+
+</details>
+
+<details>
 <summary><strong>SchemaValidator</strong> — enforce structured JSON output</summary>
 
 ```dart
@@ -332,17 +376,21 @@ layer server-side checks for regulated data.
 
 ## Roadmap
 
-**Shipped (0.x):** everything in the table above — pure regex/heuristic scanners, zero
-dependencies.
+**Shipped (0.1):** 8 heuristic scanners, `AiGuard` orchestrator, zero dependencies.
 
-**Phase 2 — on-device ML scanners (NOT yet shipped):**
+**Shipped (0.2):** PII round-trip rehydration, numbered redaction placeholders,
+`RepetitionScanner`, `ScanResult.redactionMap`.
 
-- [ ] ML-based prompt-injection classifier (small local model)
-- [ ] Toxicity / harmful-content scoring
-- [ ] Language detection
-- [ ] Answer-relevance / grounding checks
+**Next (0.3):**
 
-These will ship as an opt-in companion so the core package stays dependency-free.
+- [ ] URL/link scanner — suspicious URLs, phishing TLD patterns, data: URIs
+- [ ] Language consistency scanner — script-detection heuristic (Latin/Cyrillic/CJK/Devanagari)
+- [ ] Code execution safety scanner — dangerous generated code patterns
+
+**Future (0.4+):**
+
+- [ ] Factual grounding checker — keyword-overlap against RAG source context
+- [ ] Streaming support — `StreamingAiGuard` for chunked LLM responses
 
 ## Benchmarks
 

@@ -62,6 +62,11 @@ class ScanResult {
   /// Human-readable explanation when [passed] is `false` or text was changed.
   final String? reason;
 
+  /// Placeholder → original value for every span this scanner redacted or
+  /// hashed. Empty when nothing was transformed. Used by [AiGuard] to
+  /// rehydrate PII in LLM output.
+  final Map<String, String> redactionMap;
+
   const ScanResult({
     required this.scanner,
     required this.passed,
@@ -69,6 +74,7 @@ class ScanResult {
     this.score = 0.0,
     this.findings = const [],
     this.reason,
+    this.redactionMap = const {},
   });
 
   /// A clean pass with no findings.
@@ -76,7 +82,8 @@ class ScanResult {
       : passed = true,
         score = 0.0,
         findings = const [],
-        reason = null;
+        reason = null,
+        redactionMap = const {};
 
   bool get hasFindings => findings.isNotEmpty;
 

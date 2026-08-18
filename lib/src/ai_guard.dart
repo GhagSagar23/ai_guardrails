@@ -15,8 +15,17 @@ class GuardOutcome {
   /// `null` when blocked before the LLM ran.
   final String? input;
 
-  /// The (possibly redacted) output. `null` when blocked.
+  /// The output with redacted PII rehydrated back to original values.
+  /// `null` when blocked.
   final String? output;
+
+  /// The raw LLM output before PII rehydration. `null` when blocked.
+  /// Same as [output] when no rehydration occurred.
+  final String? rawOutput;
+
+  /// Placeholder → original value for every PII span redacted from input.
+  /// Empty when no redaction occurred.
+  final Map<String, String> piiMap;
 
   /// Per-scanner results for the input pipeline.
   final List<ScanResult> inputResults;
@@ -30,6 +39,8 @@ class GuardOutcome {
     this.blockReason,
     this.input,
     this.output,
+    this.rawOutput,
+    this.piiMap = const {},
     this.inputResults = const [],
     this.outputResults = const [],
   });
@@ -66,6 +77,7 @@ class AiGuard {
   /// at the first scanner that blocks.
   _StageRun _runStage(List<Scanner> scanners, String text, ScanStage stage) {
     final results = <ScanResult>[];
+    final mergedMap = <String, String>{};
     var current = text;
     for (final s in scanners) {
       if (!s.stages.contains(stage)) continue;
@@ -83,10 +95,11 @@ class AiGuard {
         );
       }
       results.add(r);
+      mergedMap.addAll(r.redactionMap);
       current = r.text;
-      if (!r.passed) return _StageRun(current, results, r);
+      if (!r.passed) return _StageRun(current, results, r, mergedMap);
     }
-    return _StageRun(current, results, null);
+    return _StageRun(current, results, null, mergedMap);
   }
 
   /// Scan input only, returning per-scanner results.
@@ -99,7 +112,9 @@ class AiGuard {
 
   /// Full guarded round-trip: sanitise input, call the LLM, sanitise output.
   ///
-  /// The LLM is never called if an input scanner blocks.
+  /// The LLM is never called if an input scanner blocks. When input scanners
+  /// redact PII, the output is automatically rehydrated — placeholders in the
+  /// LLM response are replaced with the original values.
   Future<GuardOutcome> run({
     required String input,
     required Future<String> Function(String sanitizedInput) llmCall,
@@ -110,6 +125,7 @@ class AiGuard {
         blocked: true,
         blockedStage: ScanStage.input,
         blockReason: inRun.blocker!.reason,
+        piiMap: inRun.redactionMap,
         inputResults: inRun.results,
       );
     }
@@ -123,15 +139,24 @@ class AiGuard {
         blockedStage: ScanStage.output,
         blockReason: outRun.blocker!.reason,
         input: inRun.text,
+        piiMap: inRun.redactionMap,
         inputResults: inRun.results,
         outputResults: outRun.results,
       );
     }
 
+    // Rehydrate: replace input-redaction placeholders in the output.
+    var rehydrated = outRun.text;
+    for (final entry in inRun.redactionMap.entries) {
+      rehydrated = rehydrated.replaceAll(entry.key, entry.value);
+    }
+
     return GuardOutcome(
       blocked: false,
       input: inRun.text,
-      output: outRun.text,
+      output: rehydrated,
+      rawOutput: outRun.text,
+      piiMap: inRun.redactionMap,
       inputResults: inRun.results,
       outputResults: outRun.results,
     );
@@ -142,5 +167,6 @@ class _StageRun {
   final String text;
   final List<ScanResult> results;
   final ScanResult? blocker;
-  _StageRun(this.text, this.results, this.blocker);
+  final Map<String, String> redactionMap;
+  _StageRun(this.text, this.results, this.blocker, this.redactionMap);
 }

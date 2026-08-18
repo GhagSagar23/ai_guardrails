@@ -15,4 +15,5 @@ export 'src/scanners/banned_topic_scanner.dart';
 export 'src/scanners/banned_pattern_scanner.dart';
 export 'src/scanners/token_limit_scanner.dart';
 export 'src/scanners/invisible_text_scanner.dart';
+export 'src/scanners/repetition_scanner.dart';
 export 'src/scanners/schema_validator.dart';
