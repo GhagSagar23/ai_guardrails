@@ -44,7 +44,7 @@ class PiiScanner implements Scanner {
     for (final p in patterns) {
       for (final m in p.regex.allMatches(text)) {
         final matched = m[0]!;
-        if (p.luhn && !_luhnValid(matched)) continue;
+        if (p.luhn && !_luhnValid(matched, p.luhnMinDigits)) continue;
         raw.add(Finding(
           type: 'pii.${p.type}',
           start: m.start,
@@ -153,10 +153,10 @@ class PiiScanner implements Scanner {
     return (hash & 0xFFFFFF).toRadixString(16).padLeft(6, '0');
   }
 
-  /// Luhn checksum over the digits of [s]; short runs are rejected.
-  static bool _luhnValid(String s) {
+  /// Luhn checksum over the digits of [s]; runs shorter than [minDigits] are rejected.
+  static bool _luhnValid(String s, [int minDigits = 12]) {
     final digits = s.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.length < 12) return false;
+    if (digits.length < minDigits) return false;
     var sum = 0;
     var alt = false;
     for (var i = digits.length - 1; i >= 0; i--) {

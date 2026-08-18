@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.0
+
+- **International PII expansion** — 6 new locales: Brazil (CPF, CNPJ), Mexico
+  (CURP, RFC), Japan (My Number), South Korea (RRN), Canada (SIN with
+  Luhn validation), Australia (TFN, Medicare). Each with country-specific
+  phone patterns.
+- **EU country-specific phones** — replaced the single generic EU phone regex
+  with dedicated patterns for UK (+44), Germany (+49), France (+33), Italy
+  (+39), and Spain (+34). Reduces false positives on partial matches.
+- **RTL text verification** — verified all scanners produce correct offsets on
+  Arabic and Hebrew text with embedded PII. Redaction preserves RTL structure.
+- **`PiiLocale` enum expanded** — added `brazil`, `mexico`, `japan`,
+  `southKorea`, `canada`, `australia`. `fromConfig` supports all locale names.
+- **`PiiPattern.luhnMinDigits`** — per-pattern Luhn minimum digit count
+  (default 12 for credit cards, 9 for Canadian SIN).
+
 ## 0.5.0
 
 - **`GuardLog`** — structured, JSON-serializable audit record of every scan.

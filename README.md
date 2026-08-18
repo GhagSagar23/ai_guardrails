@@ -220,7 +220,7 @@ throwing scanner instead.
 | Scanner | Stage(s) | Default action | Catches |
 | --- | --- | --- | --- |
 | **`pii_patterns`** *(data)* | — | — | Pattern catalog `kPiiPatterns` + `enum PiiLocale { us, eu, india }` consumed by `PiiScanner` |
-| **`PiiScanner`** | input · output | `redact` | email, phone, SSN, credit card (Luhn-checked), IBAN, IP, Aadhaar, PAN, passport |
+| **`PiiScanner`** | input · output | `redact` | email, phone, SSN, credit card (Luhn), IBAN, IP, Aadhaar, PAN, passport, CPF, CNPJ, CURP, RFC, My Number, RRN, SIN (Luhn), TFN, Medicare — 9 locales |
 | **`SecretScanner`** | input · output | `block` | AWS keys, GCP/OpenAI/Slack keys, GitHub tokens, JWTs, private-key blocks |
 | **`PromptInjectionScanner`** | input | `block` | instruction-override, system-prompt exfiltration, roleplay jailbreak, delimiter attacks |
 | **`InvisibleTextScanner`** | input | `redact` | zero-width, bidi controls, soft hyphen, Unicode tag chars |
@@ -627,8 +627,11 @@ process boundary. This is a design invariant, not a configuration option.
 **Shipped (0.5):** `GuardLog` audit trail, `GuardMetrics` hooks,
 `AiGuard.fromConfig()` policy-as-config.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — international
-PII, provider wrappers, multi-turn context, and the policy platform.
+**Shipped (0.6):** International PII (Brazil, Mexico, Japan, South Korea, Canada,
+Australia), EU country-specific phones (UK/DE/FR/IT/ES), RTL text verified.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — provider
+wrappers, multi-turn context, and the policy platform.
 
 ## Resources
 

@@ -46,34 +46,12 @@ blocks on a later one. Contributions welcome on any item; see
 - `GuardMetrics` — per-run timing and finding-count snapshot via `onMetrics` callback
 - `AiGuard.fromConfig()` — build scanner chains from JSON config without code changes
 
----
+### 0.6 — International PII expansion
 
-## Phase 0.6 — International PII expansion
-
-Credibility as a global package requires global pattern coverage.
-
-### New PII locales
-
-- [ ] Brazil: CPF, CNPJ
-- [ ] Mexico: CURP, RFC
-- [ ] Japan: My Number
-- [ ] South Korea: RRN (Resident Registration Number)
-- [ ] Canada: SIN (Social Insurance Number)
-- [ ] Australia: TFN (Tax File Number), Medicare number
-
-### Country-specific phone patterns
-
-- [ ] UK, Germany, France, Italy, Spain — replace the single EU phone regex
-- [ ] Reduce false positives on partial number matches
-
-### RTL text verification
-
-- [ ] Verify all scanners produce correct offsets on Arabic/Hebrew text
-- [ ] Test mixed-direction (bidi) text with PII embedded in RTL runs
-- [ ] Fix any offset/boundary edge cases found
-
-**Contribution-friendly:** Each locale is a self-contained PR adding patterns to
-`pii_patterns.dart` + tests. No architectural changes needed.
+- 6 new locales: Brazil (CPF, CNPJ), Mexico (CURP, RFC), Japan (My Number),
+  South Korea (RRN), Canada (SIN, Luhn-validated), Australia (TFN, Medicare)
+- EU country-specific phones: UK (+44), Germany (+49), France (+33), Italy (+39), Spain (+34)
+- RTL text (Arabic, Hebrew) verified with correct offsets and redaction
 
 ---
 

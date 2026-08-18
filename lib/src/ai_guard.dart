@@ -396,18 +396,12 @@ class AiGuard {
   }
 
   static Set<PiiLocale> _parseLocales(dynamic v) {
-    if (v == null) return const {PiiLocale.us, PiiLocale.eu, PiiLocale.india};
+    if (v == null) return PiiLocale.values.toSet();
     return (v as List).map((s) {
-      switch (s as String) {
-        case 'us':
-          return PiiLocale.us;
-        case 'eu':
-          return PiiLocale.eu;
-        case 'india':
-          return PiiLocale.india;
-        default:
-          throw ArgumentError('Unknown locale: $s');
+      for (final locale in PiiLocale.values) {
+        if (locale.name == s) return locale;
       }
+      throw ArgumentError('Unknown locale: $s');
     }).toSet();
   }
 }
