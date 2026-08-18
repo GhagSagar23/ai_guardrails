@@ -438,15 +438,13 @@ layer server-side checks for regulated data.
 
 **Shipped (0.1):** 8 heuristic scanners, `AiGuard` orchestrator, zero dependencies.
 
-**Shipped (0.2):** PII round-trip rehydration, numbered redaction placeholders,
-`RepetitionScanner`, `ScanResult.redactionMap`.
+**Shipped (0.2):** PII round-trip rehydration, `RepetitionScanner`.
 
 **Shipped (0.3):** `UrlScanner`, `LanguageScanner`, `CodeExecutionScanner`.
 
-**Next (0.4):**
-
-- [ ] Factual grounding checker — keyword-overlap against RAG source context
-- [ ] Streaming support — `StreamingAiGuard` for chunked LLM responses
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — streaming,
+enterprise observability, international PII, provider wrappers, multi-turn
+context, and the policy platform.
 
 ## Benchmarks
 
