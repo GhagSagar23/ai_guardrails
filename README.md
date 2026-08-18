@@ -149,6 +149,9 @@ throwing scanner instead.
 | **`BannedPatternScanner`** | input · output | `block` | any `Pattern` (regex or literal) you supply |
 | **`TokenLimitScanner`** | input | `block` | prompts over an approximate token budget |
 | **`RepetitionScanner`** | output | `block` | degenerate model output (looping / repeated phrases) |
+| **`UrlScanner`** | input · output | `block` | suspicious URLs: IP-literal, data/JS URIs, phishing TLDs, shorteners, punycode, credentials |
+| **`LanguageScanner`** | input · output | `block` | unexpected script/writing-system switches (Latin, Cyrillic, CJK, Devanagari, Arabic, …) |
+| **`CodeExecutionScanner`** | output | `block` | dangerous generated code: shell, SQL destruction, eval/exec injection, filesystem deletion |
 | **`SchemaValidator`** | output | `block` | output that isn't valid JSON matching a minimal JSON-Schema |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
@@ -295,6 +298,63 @@ and `threshold` (default 0.3). Output-stage only.
 </details>
 
 <details>
+<summary><strong>UrlScanner</strong> — flag suspicious URLs</summary>
+
+```dart
+final urls = UrlScanner(); // defaults to GuardAction.block, all categories
+
+final r = urls.scan('Click http://192.168.1.1/login or https://evil.tk/phish');
+print(r.passed); // false
+print(r.findings); // [Finding(url.ip_literal …), Finding(url.suspicious_tld …)]
+```
+
+Detects IP-literal hosts, `data:`/`javascript:` URIs, phishing TLDs (`.tk`, `.buzz`,
+`.zip`, `.click`, …), URL shorteners (bit.ly, tinyurl, t.co, …), punycode/IDN
+homograph domains, and embedded credentials (`user:pass@host`). Filter checks with
+`categories: {UrlCategory.dataUri, UrlCategory.shortener}`.
+
+</details>
+
+<details>
+<summary><strong>LanguageScanner</strong> — detect unexpected script switches</summary>
+
+```dart
+final lang = LanguageScanner(
+  expectedScripts: {UnicodeScript.latin},
+  threshold: 0.7, // at least 70% of classified chars must be Latin
+);
+
+final r = lang.scan('Привет мир, это тестовое сообщение');
+print(r.passed); // false — dominant script is Cyrillic, not Latin
+```
+
+Classifies characters by Unicode script block (Latin, Cyrillic, Greek, Arabic,
+Devanagari, CJK, Hangul, Hiragana, Katakana, Thai). When the expected-script fraction
+drops below `threshold`, the text is flagged. Short texts (<10 classified chars) are
+ignored. Useful for catching cross-script prompt injection or unexpected language output.
+
+</details>
+
+<details>
+<summary><strong>CodeExecutionScanner</strong> — catch dangerous generated code</summary>
+
+```dart
+final code = CodeExecutionScanner(); // defaults to all categories
+
+final r = code.scan('subprocess.run(["rm", "-rf", "/"])');
+print(r.passed); // false
+print(r.findings); // [Finding(code_exec.injection …), Finding(code_exec.shell …)]
+```
+
+Detects shell dangers (`rm -rf`, `curl|sh`, `dd if=`, `chmod 777`), SQL destruction
+(`DROP TABLE`, `TRUNCATE`, `DELETE FROM`), code injection (`eval(`, `exec(`,
+`os.system(`, `subprocess.run(`, `Process.start(`), and filesystem deletion
+(`shutil.rmtree(`, `unlink(`). Filter with `categories: {CodeCategory.sql}`.
+Output-stage only — for code-generation LLM apps where the output might be executed.
+
+</details>
+
+<details>
 <summary><strong>SchemaValidator</strong> — enforce structured JSON output</summary>
 
 ```dart
@@ -381,13 +441,9 @@ layer server-side checks for regulated data.
 **Shipped (0.2):** PII round-trip rehydration, numbered redaction placeholders,
 `RepetitionScanner`, `ScanResult.redactionMap`.
 
-**Next (0.3):**
+**Shipped (0.3):** `UrlScanner`, `LanguageScanner`, `CodeExecutionScanner`.
 
-- [ ] URL/link scanner — suspicious URLs, phishing TLD patterns, data: URIs
-- [ ] Language consistency scanner — script-detection heuristic (Latin/Cyrillic/CJK/Devanagari)
-- [ ] Code execution safety scanner — dangerous generated code patterns
-
-**Future (0.4+):**
+**Next (0.4):**
 
 - [ ] Factual grounding checker — keyword-overlap against RAG source context
 - [ ] Streaming support — `StreamingAiGuard` for chunked LLM responses

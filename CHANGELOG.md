@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0
+
+- **`UrlScanner`** — detects suspicious URLs: IP-literal hosts, `data:`/`javascript:`
+  URIs, phishing TLDs (`.tk`, `.buzz`, `.zip`, etc.), URL shorteners, punycode
+  (homograph attacks), and embedded credentials. Configurable categories via
+  `UrlCategory` enum. Runs on input and output.
+- **`LanguageScanner`** — script-detection heuristic using Unicode character-class
+  ratios (Latin, Cyrillic, CJK, Devanagari, Arabic, Greek, Hangul, Hiragana,
+  Katakana, Thai). Flags text when the expected-script fraction falls below a
+  threshold. Catches cross-script prompt injection and unexpected language switches.
+- **`CodeExecutionScanner`** — detects dangerous patterns in generated code: shell
+  commands (`rm -rf`, `curl|sh`, `dd`, `chmod 777`), SQL destruction (`DROP TABLE`,
+  `TRUNCATE`, `DELETE FROM`), code injection (`eval`, `exec`, `os.system`,
+  `subprocess`, `Process.start`), and filesystem deletion (`shutil.rmtree`,
+  `unlink`). Configurable categories via `CodeCategory` enum. Output-stage only.
+
 ## 0.2.0
 
 - **PII round-trip rehydration** — `AiGuard.run()` now automatically restores
