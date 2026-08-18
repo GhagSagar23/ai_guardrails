@@ -75,7 +75,7 @@ class AiGuard {
 
   /// Run [scanners] over [text] for [stage], chaining redactions and stopping
   /// at the first scanner that blocks.
-  _StageRun _runStage(List<Scanner> scanners, String text, ScanStage stage) {
+  StageRun _runStage(List<Scanner> scanners, String text, ScanStage stage) {
     final results = <ScanResult>[];
     final mergedMap = <String, String>{};
     var current = text;
@@ -97,9 +97,9 @@ class AiGuard {
       results.add(r);
       mergedMap.addAll(r.redactionMap);
       current = r.text;
-      if (!r.passed) return _StageRun(current, results, r, mergedMap);
+      if (!r.passed) return StageRun(current, results, r, mergedMap);
     }
-    return _StageRun(current, results, null, mergedMap);
+    return StageRun(current, results, null, mergedMap);
   }
 
   /// Scan input only, returning per-scanner results.
@@ -109,6 +109,16 @@ class AiGuard {
   /// Scan output only, returning per-scanner results.
   List<ScanResult> scanOutput(String text) =>
       _runStage(outputScanners, text, ScanStage.output).results;
+
+  /// Run input scanners, returning the full stage result including redaction map.
+  /// Used by [StreamingAiGuard] to access the redaction map before streaming.
+  StageRun runInputStage(String text) =>
+      _runStage(inputScanners, text, ScanStage.input);
+
+  /// Run output scanners on a single segment.
+  /// Used by [StreamingAiGuard] to scan each chunk.
+  StageRun runOutputStage(String text) =>
+      _runStage(outputScanners, text, ScanStage.output);
 
   /// Full guarded round-trip: sanitise input, call the LLM, sanitise output.
   ///
@@ -163,10 +173,10 @@ class AiGuard {
   }
 }
 
-class _StageRun {
+class StageRun {
   final String text;
   final List<ScanResult> results;
   final ScanResult? blocker;
   final Map<String, String> redactionMap;
-  _StageRun(this.text, this.results, this.blocker, this.redactionMap);
+  StageRun(this.text, this.results, this.blocker, this.redactionMap);
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.4.0
+
+- **`StreamingAiGuard`** — streaming wrapper for chunked LLM responses. Buffers
+  incoming chunks, splits at configurable boundaries (default: newline), runs
+  output scanners on each segment, yields `GuardedChunk`s. Terminates the stream
+  on block. PII rehydration works per-chunk. Input scanning is identical to
+  `AiGuard`. Scanners see each segment independently — use `AiGuard` for
+  full-output scanning (e.g. `SchemaValidator`) after the stream completes.
+- **`GroundingScanner`** — checks whether LLM output is grounded in a provided
+  source context via keyword-overlap heuristic. Extracts content words (non-stop-
+  words), computes overlap ratio, flags text when grounding falls below threshold.
+  Finding type: `grounding.unsupported_claim`. Default action: `warn`.
+- **`StageRun`** — exposed as public API for `StreamingAiGuard` and advanced
+  use cases. `AiGuard.runInputStage()` and `AiGuard.runOutputStage()` return
+  full stage results including redaction maps.
+
 ## 0.3.0
 
 - **`UrlScanner`** — detects suspicious URLs: IP-literal hosts, `data:`/`javascript:`

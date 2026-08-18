@@ -34,27 +34,11 @@ blocks on a later one. Contributions welcome on any item; see
 - `LanguageScanner` — Unicode script-ratio heuristic (10 writing systems)
 - `CodeExecutionScanner` — shell, SQL, injection, filesystem danger patterns
 
----
+### 0.4 — Streaming & grounding
 
-## Phase 0.4 — Streaming & grounding
-
-Complete the core runtime story: real-time scanning and output quality.
-
-### Streaming support
-
-- [ ] `StreamingAiGuard` — wraps `Stream<String>` from streaming LLM responses
-- [ ] Scans on sentence/delimiter boundaries, can block mid-stream
-- [ ] `GuardedChunk` output type with per-chunk scan status
-- [ ] `Scanner` contract stays synchronous — streaming is orchestration, not a scanner concern
-
-### Grounding checker
-
-- [ ] `GroundingScanner` — given source context + LLM output, measure entity/claim overlap
-- [ ] Keyword/noun-phrase extraction, overlap ratio against provided context
-- [ ] Finding type: `grounding.unsupported_claim`
-- [ ] Documented accuracy limits — heuristic, not ML
-
-**Design constraint:** Both features stay pure Dart, zero deps.
+- `StreamingAiGuard` — streaming wrapper for chunked LLM responses with per-segment scanning
+- `GroundingScanner` — keyword-overlap grounding checker against source context
+- `StageRun` / `AiGuard.runInputStage()` / `runOutputStage()` — public stage-level API
 
 ---
 

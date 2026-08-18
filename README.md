@@ -152,6 +152,7 @@ throwing scanner instead.
 | **`UrlScanner`** | input · output | `block` | suspicious URLs: IP-literal, data/JS URIs, phishing TLDs, shorteners, punycode, credentials |
 | **`LanguageScanner`** | input · output | `block` | unexpected script/writing-system switches (Latin, Cyrillic, CJK, Devanagari, Arabic, …) |
 | **`CodeExecutionScanner`** | output | `block` | dangerous generated code: shell, SQL destruction, eval/exec injection, filesystem deletion |
+| **`GroundingScanner`** | output | `warn` | LLM output not grounded in provided source context (keyword-overlap heuristic) |
 | **`SchemaValidator`** | output | `block` | output that isn't valid JSON matching a minimal JSON-Schema |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
@@ -355,6 +356,30 @@ Output-stage only — for code-generation LLM apps where the output might be exe
 </details>
 
 <details>
+<summary><strong>GroundingScanner</strong> — check output against source context</summary>
+
+```dart
+const context = 'The Eiffel Tower is in Paris. It was built in 1889.';
+
+final grounding = GroundingScanner(
+  context: context,
+  threshold: 0.5, // at least 50% of output content words must be in context
+);
+
+final r = grounding.scan('The Colosseum in Rome was built by the Flavians.');
+print(r.passed);   // true (default action is warn)
+print(r.findings); // [Finding(grounding.unsupported_claim match=colosseum …), …]
+print(r.score);    // 0.0..1.0 — higher = less grounded
+```
+
+Extracts content words (non-stop-words) from both context and output, computes
+overlap ratio. This is a heuristic keyword-overlap check — it catches fabricated
+entities but misses paraphrases. Useful as a first-pass hallucination detector for
+RAG apps. Create a new `GroundingScanner` per context/conversation.
+
+</details>
+
+<details>
 <summary><strong>SchemaValidator</strong> — enforce structured JSON output</summary>
 
 ```dart
@@ -407,6 +432,35 @@ class UppercaseYell implements Scanner {
 
 Drop it into `inputScanners` / `outputScanners` alongside the built-ins.
 
+## Streaming
+
+`StreamingAiGuard` wraps streaming LLM responses — it buffers chunks, scans at
+configurable boundaries, and yields `GuardedChunk`s. If a scanner blocks, the stream
+terminates immediately.
+
+```dart
+final guard = StreamingAiGuard(
+  inputScanners: [PiiScanner(action: GuardAction.redact)],
+  outputScanners: [UrlScanner()],
+  boundary: '\n', // scan per line (default)
+);
+
+await for (final chunk in guard.run(
+  input: 'Email alice@work.com about the release.',
+  llmStream: (sanitized) => myLlm.streamCompletion(sanitized),
+)) {
+  if (chunk.blocked) {
+    print('Blocked: ${chunk.blockReason}');
+    break;
+  }
+  stdout.write(chunk.text); // PII auto-rehydrated per chunk
+}
+```
+
+Scanners see each segment independently — cross-segment patterns are not detected.
+Use `AiGuard` for full-output scanning (e.g. `SchemaValidator`) after the stream
+completes when you need whole-response coverage.
+
 ## Accuracy & limitations
 
 These scanners are **regex/heuristic and context-free** — they match the *shape* of data,
@@ -442,9 +496,11 @@ layer server-side checks for regulated data.
 
 **Shipped (0.3):** `UrlScanner`, `LanguageScanner`, `CodeExecutionScanner`.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — streaming,
-enterprise observability, international PII, provider wrappers, multi-turn
-context, and the policy platform.
+**Shipped (0.4):** `StreamingAiGuard`, `GroundingScanner`.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — enterprise
+observability, international PII, provider wrappers, multi-turn context, and
+the policy platform.
 
 ## Benchmarks
 
