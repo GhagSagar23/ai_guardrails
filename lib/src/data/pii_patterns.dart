@@ -125,7 +125,7 @@ final List<PiiPattern> kPiiPatterns = [
   PiiPattern(
     type: 'phone',
     locales: const {PiiLocale.india},
-    regex: RegExp(r'\b(?:\+?91[-.\s]?)?[6-9]\d{9}\b'),
+    regex: RegExp(r'(?<!\w)(?:\+?91[-.\s]?)?[6-9]\d{4}[-.\s]?\d{5}\b'),
   ),
   PiiPattern(
     type: 'aadhaar',
