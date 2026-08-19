@@ -64,8 +64,7 @@ void main() {
     });
 
     test('category filter limits checks', () {
-      final s =
-          UrlScanner(categories: const {UrlCategory.dataUri});
+      final s = UrlScanner(categories: const {UrlCategory.dataUri});
       final r = s.scan('Go to http://192.168.1.1/admin');
       expect(r.passed, isTrue);
     });

@@ -130,8 +130,7 @@ class StreamingAiGuard {
     return matches.isEmpty ? null : matches.first;
   }
 
-  GuardedChunk _scanAndRehydrate(
-      String segment, Map<String, String> piiMap) {
+  GuardedChunk _scanAndRehydrate(String segment, Map<String, String> piiMap) {
     final outRun = _guard.runOutputStage(segment);
 
     if (outRun.blocker != null) {

@@ -7,7 +7,11 @@ void main() {
       final guard = AiGuard.fromConfig({
         'failClosed': true,
         'inputScanners': [
-          {'type': 'pii', 'action': 'redact', 'locales': ['us']},
+          {
+            'type': 'pii',
+            'action': 'redact',
+            'locales': ['us']
+          },
           {'type': 'secret'},
           {'type': 'prompt_injection', 'threshold': 0.5},
         ],
@@ -32,7 +36,9 @@ void main() {
             'schema': {
               'type': 'object',
               'required': ['name'],
-              'properties': {'name': {'type': 'string'}},
+              'properties': {
+                'name': {'type': 'string'}
+              },
             },
           },
         ],
@@ -79,9 +85,17 @@ void main() {
 
     test('all scanner types are recognized', () {
       final scannerTypes = [
-        'pii', 'secret', 'prompt_injection', 'invisible_text',
-        'token_limit', 'repetition', 'url', 'language',
-        'code_exec', 'grounding', 'schema',
+        'pii',
+        'secret',
+        'prompt_injection',
+        'invisible_text',
+        'token_limit',
+        'repetition',
+        'url',
+        'language',
+        'code_exec',
+        'grounding',
+        'schema',
       ];
       for (final type in scannerTypes) {
         final config = <String, dynamic>{'type': type};

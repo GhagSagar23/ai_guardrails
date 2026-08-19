@@ -25,7 +25,8 @@ void main() {
     });
 
     test('Devanagari text blocks when Latin expected', () {
-      final r = scanner.scan('यह एक परीक्षण संदेश है जो भाषा का पता लगाने के लिए है');
+      final r =
+          scanner.scan('यह एक परीक्षण संदेश है जो भाषा का पता लगाने के लिए है');
       expect(r.passed, isFalse);
       expect(r.findings.first.match, 'devanagari');
     });
@@ -59,7 +60,8 @@ void main() {
     });
 
     test('threshold adjusts sensitivity', () {
-      const mixedText = 'Hello world Привет мир mixed text here more English words';
+      const mixedText =
+          'Hello world Привет мир mixed text here more English words';
       final loose = LanguageScanner(threshold: 0.3).scan(mixedText);
       final tight = LanguageScanner(threshold: 0.95).scan(mixedText);
       expect(loose.passed, isTrue);
@@ -67,7 +69,8 @@ void main() {
     });
 
     test('Arabic script detected', () {
-      final r = scanner.scan('مرحبا بالعالم هذه رسالة اختبار للتحقق من كشف اللغة');
+      final r =
+          scanner.scan('مرحبا بالعالم هذه رسالة اختبار للتحقق من كشف اللغة');
       expect(r.passed, isFalse);
       expect(r.findings.first.match, 'arabic');
     });

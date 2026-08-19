@@ -43,9 +43,7 @@ class RepetitionScanner implements Scanner {
     final score = 1.0 - (unique / totalPositions);
     if (score < threshold) return ScanResult.pass(name, text);
 
-    final repeated = counts.entries
-        .where((e) => e.value > 1)
-        .toList()
+    final repeated = counts.entries.where((e) => e.value > 1).toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
     final findings = repeated

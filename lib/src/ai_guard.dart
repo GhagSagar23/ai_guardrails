@@ -213,7 +213,12 @@ class AiGuard {
         inputResults: inRun.results,
       );
       _emitCallbacks(
-        outcome, input, null, wallStart, inputStart, Duration.zero,
+        outcome,
+        input,
+        null,
+        wallStart,
+        inputStart,
+        Duration.zero,
       );
       return outcome;
     }
@@ -236,7 +241,12 @@ class AiGuard {
         outputResults: outRun.results,
       );
       _emitCallbacks(
-        outcome, input, raw, wallStart, inputStart, outputStart.elapsed,
+        outcome,
+        input,
+        raw,
+        wallStart,
+        inputStart,
+        outputStart.elapsed,
       );
       return outcome;
     }
@@ -257,7 +267,12 @@ class AiGuard {
       outputResults: outRun.results,
     );
     _emitCallbacks(
-      outcome, input, rehydrated, wallStart, inputStart, outputStart.elapsed,
+      outcome,
+      input,
+      rehydrated,
+      wallStart,
+      inputStart,
+      outputStart.elapsed,
     );
     return outcome;
   }
@@ -335,9 +350,8 @@ class AiGuard {
           caseSensitive: cfg['caseSensitive'] as bool? ?? false,
         );
       case 'banned_pattern':
-        final patterns = (cfg['patterns'] as List)
-            .map((p) => RegExp(p as String))
-            .toList();
+        final patterns =
+            (cfg['patterns'] as List).map((p) => RegExp(p as String)).toList();
         return BannedPatternScanner(
           patterns,
           action: action ?? GuardAction.block,

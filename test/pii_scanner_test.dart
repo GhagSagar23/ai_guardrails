@@ -167,8 +167,7 @@ void main() {
 
     test('block and warn produce empty map', () {
       for (final action in [GuardAction.block, GuardAction.warn]) {
-        final r = PiiScanner(action: action, types: {'email'})
-            .scan('a@b.com');
+        final r = PiiScanner(action: action, types: {'email'}).scan('a@b.com');
         expect(r.redactionMap, isEmpty);
       }
     });

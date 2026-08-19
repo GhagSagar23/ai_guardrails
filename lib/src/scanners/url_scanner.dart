@@ -107,8 +107,7 @@ class UrlScanner implements Scanner {
         ));
       }
 
-      if (categories.contains(UrlCategory.ipLiteral) &&
-          _ipHost.hasMatch(url)) {
+      if (categories.contains(UrlCategory.ipLiteral) && _ipHost.hasMatch(url)) {
         findings.add(Finding(
           type: 'url.ip_literal',
           start: m.start,

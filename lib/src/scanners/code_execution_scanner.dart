@@ -81,7 +81,9 @@ class CodeExecutionScanner implements Scanner {
         RegExp(r'\bFunction\s*\(', caseSensitive: true)),
 
     // Filesystem
-    _CodePattern(CodeCategory.filesystem, 'code_exec.filesystem',
+    _CodePattern(
+        CodeCategory.filesystem,
+        'code_exec.filesystem',
         RegExp(r'\bFile\.delete\b|\bDirectory\.delete\b',
             caseSensitive: false)),
     _CodePattern(CodeCategory.filesystem, 'code_exec.filesystem',
@@ -116,8 +118,7 @@ class CodeExecutionScanner implements Scanner {
       text: text,
       score: 1.0,
       findings: findings,
-      reason:
-          passed ? 'dangerous code detected: $kinds' : 'blocked: code_exec',
+      reason: passed ? 'dangerous code detected: $kinds' : 'blocked: code_exec',
     );
   }
 }

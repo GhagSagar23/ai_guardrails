@@ -44,8 +44,7 @@ class _InputBlocker implements Scanner {
       );
 }
 
-Stream<String> _streamFrom(List<String> chunks) =>
-    Stream.fromIterable(chunks);
+Stream<String> _streamFrom(List<String> chunks) => Stream.fromIterable(chunks);
 
 void main() {
   group('StreamingAiGuard', () {
@@ -100,14 +99,15 @@ void main() {
       final blocked = chunks.where((c) => c.blocked);
       expect(blocked, hasLength(1));
       expect(blocked.first.blockReason, contains('DANGER'));
-      final afterBlock =
-          chunks.skipWhile((c) => !c.blocked).skip(1).toList();
+      final afterBlock = chunks.skipWhile((c) => !c.blocked).skip(1).toList();
       expect(afterBlock, isEmpty);
     });
 
     test('PII rehydration works in streaming mode', () async {
       final guard = StreamingAiGuard(
-        inputScanners: [PiiScanner(action: GuardAction.redact, types: {'email'})],
+        inputScanners: [
+          PiiScanner(action: GuardAction.redact, types: {'email'})
+        ],
       );
       String? sanitizedInput;
       final chunks = await guard
@@ -154,7 +154,9 @@ void main() {
 
     test('scanInput delegates to AiGuard', () {
       final guard = StreamingAiGuard(
-        inputScanners: [PiiScanner(action: GuardAction.warn, types: {'email'})],
+        inputScanners: [
+          PiiScanner(action: GuardAction.warn, types: {'email'})
+        ],
       );
       final results = guard.scanInput('test alice@example.com');
       expect(results.any((r) => r.hasFindings), isTrue);

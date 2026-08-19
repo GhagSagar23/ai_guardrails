@@ -6,7 +6,17 @@ library;
 
 /// Region a pattern applies to. `all`-ish coverage is expressed by listing
 /// every relevant locale in [PiiPattern.locales].
-enum PiiLocale { us, eu, india, brazil, mexico, japan, southKorea, canada, australia }
+enum PiiLocale {
+  us,
+  eu,
+  india,
+  brazil,
+  mexico,
+  japan,
+  southKorea,
+  canada,
+  australia
+}
 
 /// One named PII pattern with the locales it belongs to.
 class PiiPattern {
@@ -35,9 +45,15 @@ class PiiPattern {
 }
 
 const Set<PiiLocale> _all = {
-  PiiLocale.us, PiiLocale.eu, PiiLocale.india, PiiLocale.brazil,
-  PiiLocale.mexico, PiiLocale.japan, PiiLocale.southKorea,
-  PiiLocale.canada, PiiLocale.australia,
+  PiiLocale.us,
+  PiiLocale.eu,
+  PiiLocale.india,
+  PiiLocale.brazil,
+  PiiLocale.mexico,
+  PiiLocale.japan,
+  PiiLocale.southKorea,
+  PiiLocale.canada,
+  PiiLocale.australia,
 };
 
 /// The catalogue of PII patterns scanned by [PiiScanner].
@@ -155,7 +171,8 @@ final List<PiiPattern> kPiiPatterns = [
   PiiPattern(
     type: 'phone',
     locales: const {PiiLocale.brazil},
-    regex: RegExp(r'\b(?:\+?55[-.\s]?)?\(?\d{2}\)?[-.\s]?\d{4,5}[-.\s]?\d{4}\b'),
+    regex:
+        RegExp(r'\b(?:\+?55[-.\s]?)?\(?\d{2}\)?[-.\s]?\d{4,5}[-.\s]?\d{4}\b'),
   ),
 
   // ── Mexico ──────────────────────────────────────────────────────────

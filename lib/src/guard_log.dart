@@ -61,8 +61,7 @@ class GuardLog {
           passed: r.passed,
           score: r.score,
           findingCount: r.findings.length,
-          findingTypes:
-              r.findings.map((f) => f.type).toSet().toList()..sort(),
+          findingTypes: r.findings.map((f) => f.type).toSet().toList()..sort(),
         ),
       for (final r in outputResults)
         ScannerLogEntry(
@@ -71,8 +70,7 @@ class GuardLog {
           passed: r.passed,
           score: r.score,
           findingCount: r.findings.length,
-          findingTypes:
-              r.findings.map((f) => f.type).toSet().toList()..sort(),
+          findingTypes: r.findings.map((f) => f.type).toSet().toList()..sort(),
         ),
     ];
 

@@ -68,7 +68,8 @@ void main() {
     test('os.system() detected', () {
       final r = scanner.scan('os.system("rm -rf /")');
       expect(r.passed, isFalse);
-      expect(_types(r), containsAll(['code_exec.injection', 'code_exec.shell']));
+      expect(
+          _types(r), containsAll(['code_exec.injection', 'code_exec.shell']));
     });
 
     test('subprocess.run() detected', () {
