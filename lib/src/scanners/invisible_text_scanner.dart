@@ -1,3 +1,4 @@
+import '../fnv.dart';
 import '../scanner.dart';
 
 /// One category of invisible/zero-width Unicode characters, defined by a
@@ -77,41 +78,30 @@ class InvisibleTextScanner implements Scanner {
 
     switch (action) {
       case GuardAction.block:
-        return ScanResult(
-          scanner: name,
-          passed: false,
-          text: text,
-          score: 1.0,
+        return ScanResult.block(
+          name,
+          text,
           findings: findings,
           reason: 'found ${findings.length} invisible character(s)',
         );
-
       case GuardAction.warn:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
-          score: 0.5,
+        return ScanResult.warn(
+          name,
+          text,
           findings: findings,
           reason: 'found ${findings.length} invisible character(s)',
         );
-
       case GuardAction.redact:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: _rewrite(text, (_, __) => ''),
-          score: 0.5,
+        return ScanResult.warn(
+          name,
+          _rewrite(text, (_, __) => ''),
           findings: findings,
           reason: 'stripped ${findings.length} invisible character(s)',
         );
-
       case GuardAction.hash:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: _rewrite(text, (cat, ch) => '[$cat:${_fnv1a(ch)}]'),
-          score: 0.5,
+        return ScanResult.warn(
+          name,
+          _rewrite(text, (cat, ch) => '[$cat:${fnv1a(ch)}]'),
           findings: findings,
           reason: 'tokenized ${findings.length} invisible character(s)',
         );
@@ -130,14 +120,4 @@ class InvisibleTextScanner implements Scanner {
     }
     return buf.toString();
   }
-}
-
-/// Tiny local FNV-1a (32-bit) → 6 hex chars. No crypto dependency.
-String _fnv1a(String s) {
-  var h = 0x811c9dc5;
-  for (final c in s.codeUnits) {
-    h ^= c;
-    h = (h * 0x01000193) & 0xFFFFFFFF;
-  }
-  return h.toRadixString(16).padLeft(8, '0').substring(2);
 }

@@ -1,3 +1,4 @@
+import '../fnv.dart';
 import '../scanner.dart';
 
 /// Blocks/redacts text that mentions any configured banned topic phrase.
@@ -61,10 +62,9 @@ class BannedTopicScanner implements Scanner {
       case GuardAction.block:
         final score = findings.fold<double>(
             0, (a, f) => f.confidence > a ? f.confidence : a);
-        return ScanResult(
-          scanner: name,
-          passed: false,
-          text: text,
+        return ScanResult.block(
+          name,
+          text,
           score: score,
           findings: findings,
           reason: 'banned topic(s): ${matched.join(', ')}',
@@ -74,46 +74,25 @@ class BannedTopicScanner implements Scanner {
         for (final p in _patterns) {
           out = out.replaceAllMapped(p, (_) => '[TOPIC]');
         }
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: out,
-          score: 0.5,
+        return ScanResult.warn(
+          name,
+          out,
           findings: findings,
           reason: 'redacted ${findings.length} topic match(es)',
         );
       case GuardAction.hash:
         var out = text;
         for (final p in _patterns) {
-          out =
-              out.replaceAllMapped(p, (m) => '[TOPIC:${_fnv1a(m.group(0)!)}]');
+          out = out.replaceAllMapped(p, (m) => '[TOPIC:${fnv1a(m.group(0)!)}]');
         }
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: out,
-          score: 0.5,
+        return ScanResult.warn(
+          name,
+          out,
           findings: findings,
           reason: 'hashed ${findings.length} topic match(es)',
         );
       case GuardAction.warn:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
-          score: 0.5,
-          findings: findings,
-        );
+        return ScanResult.warn(name, text, findings: findings);
     }
   }
-}
-
-/// Tiny local FNV-1a → 6 hex chars. Stable, not cryptographic.
-String _fnv1a(String s) {
-  var hash = 0x811c9dc5;
-  for (final unit in s.codeUnits) {
-    hash ^= unit;
-    hash = (hash * 0x01000193) & 0xFFFFFFFF;
-  }
-  return hash.toRadixString(16).padLeft(8, '0').substring(2);
 }

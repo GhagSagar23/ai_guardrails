@@ -75,10 +75,10 @@ class GuardOutcome {
 /// [run]'s `llmCall`.
 class AiGuard {
   /// Scanners applied to user input, in order.
-  final List<Scanner> inputScanners;
+  final List<ScannerBase> inputScanners;
 
   /// Scanners applied to model output, in order.
-  final List<Scanner> outputScanners;
+  final List<ScannerBase> outputScanners;
 
   /// When a scanner throws, treat it as a block (`true`) or skip it (`false`).
   final bool failClosed;
@@ -142,7 +142,8 @@ class AiGuard {
 
   /// Run [scanners] over [text] for [stage], chaining redactions and stopping
   /// at the first scanner that blocks.
-  StageRun _runStage(List<Scanner> scanners, String text, ScanStage stage) {
+  Future<StageRun> _runStage(
+      List<ScannerBase> scanners, String text, ScanStage stage) async {
     final results = <ScanResult>[];
     final mergedMap = <String, String>{};
     var current = text;
@@ -150,7 +151,9 @@ class AiGuard {
       if (!s.stages.contains(stage)) continue;
       ScanResult r;
       try {
-        r = s.scan(current, stage: stage);
+        r = s is AsyncScanner
+            ? await s.scanAsync(current, stage: stage)
+            : (s as Scanner).scan(current, stage: stage);
       } catch (e) {
         if (!failClosed) continue;
         r = ScanResult(
@@ -170,21 +173,21 @@ class AiGuard {
   }
 
   /// Scan input only, returning per-scanner results.
-  List<ScanResult> scanInput(String text) =>
-      _runStage(inputScanners, text, ScanStage.input).results;
+  Future<List<ScanResult>> scanInput(String text) async =>
+      (await _runStage(inputScanners, text, ScanStage.input)).results;
 
   /// Scan output only, returning per-scanner results.
-  List<ScanResult> scanOutput(String text) =>
-      _runStage(outputScanners, text, ScanStage.output).results;
+  Future<List<ScanResult>> scanOutput(String text) async =>
+      (await _runStage(outputScanners, text, ScanStage.output)).results;
 
   /// Run input scanners, returning the full stage result including redaction map.
   /// Used by [StreamingAiGuard] to access the redaction map before streaming.
-  StageRun runInputStage(String text) =>
+  Future<StageRun> runInputStage(String text) async =>
       _runStage(inputScanners, text, ScanStage.input);
 
   /// Run output scanners on a single segment.
   /// Used by [StreamingAiGuard] to scan each chunk.
-  StageRun runOutputStage(String text) =>
+  Future<StageRun> runOutputStage(String text) async =>
       _runStage(outputScanners, text, ScanStage.output);
 
   /// Full guarded round-trip: sanitise input, call the LLM, sanitise output.
@@ -200,7 +203,7 @@ class AiGuard {
   }) async {
     final wallStart = Stopwatch()..start();
     final inputStart = Stopwatch()..start();
-    final inRun = _runStage(inputScanners, input, ScanStage.input);
+    final inRun = await _runStage(inputScanners, input, ScanStage.input);
     inputStart.stop();
 
     if (inRun.blocker != null) {
@@ -226,7 +229,7 @@ class AiGuard {
     final raw = await llmCall(inRun.text);
 
     final outputStart = Stopwatch()..start();
-    final outRun = _runStage(outputScanners, raw, ScanStage.output);
+    final outRun = await _runStage(outputScanners, raw, ScanStage.output);
     outputStart.stop();
 
     if (outRun.blocker != null) {

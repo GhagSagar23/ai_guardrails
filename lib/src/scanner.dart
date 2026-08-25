@@ -85,6 +85,26 @@ class ScanResult {
         reason = null,
         redactionMap = const {};
 
+  /// A blocking result.
+  const ScanResult.block(
+    this.scanner,
+    this.text, {
+    required this.findings,
+    this.reason,
+    this.score = 1.0,
+  })  : passed = false,
+        redactionMap = const {};
+
+  /// A non-blocking result that records findings.
+  const ScanResult.warn(
+    this.scanner,
+    this.text, {
+    required this.findings,
+    this.reason,
+    this.score = 0.5,
+  })  : passed = true,
+        redactionMap = const {};
+
   bool get hasFindings => findings.isNotEmpty;
 
   @override
@@ -92,18 +112,49 @@ class ScanResult {
       'ScanResult($scanner passed=$passed score=$score findings=${findings.length})';
 }
 
+/// Base type for composable scanner contracts.
+///
+/// Sealed to [Scanner] and [AsyncScanner] (same library) — prevents third
+/// parties from implementing [ScannerBase] directly, which would bypass the
+/// `is AsyncScanner` / `as Scanner` dispatch in `AiGuard._runStage` and
+/// either silently no-op (failClosed: false) or block with a misleading
+/// "type cast" error (failClosed: true).
+sealed class ScannerBase {
+  String get name;
+  Set<ScanStage> get stages;
+}
+
 /// A composable safety check over a single string.
 ///
 /// Implementations MUST be pure and synchronous: no I/O, no network, no
 /// mutable shared state. That keeps the pipeline deterministic and cheap
 /// enough to run on the UI isolate.
-abstract class Scanner {
+abstract class Scanner implements ScannerBase {
   /// Stable, unique name (also used in [ScanResult.scanner]).
+  @override
   String get name;
 
   /// Stages this scanner is allowed to run in.
+  @override
   Set<ScanStage> get stages;
 
   /// Scan [text] for the given [stage] and return a result.
   ScanResult scan(String text, {ScanStage stage = ScanStage.input});
+}
+
+/// Async counterpart of [Scanner] for scanners that need I/O or model
+/// inference (e.g. on-device ML classifiers).
+///
+/// Implementations may perform I/O, load models, or run compute-heavy
+/// inference. [AiGuard] awaits async scanners inline in the pipeline.
+abstract class AsyncScanner implements ScannerBase {
+  @override
+  String get name;
+
+  @override
+  Set<ScanStage> get stages;
+
+  /// Scan [text] for the given [stage] and return a result.
+  Future<ScanResult> scanAsync(String text,
+      {ScanStage stage = ScanStage.input});
 }

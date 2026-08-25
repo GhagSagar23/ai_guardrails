@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+- **`AsyncScanner`** — async counterpart to `Scanner` for scanners that need
+  I/O or model inference (e.g. on-device ML classifiers). Both now implement
+  a shared `ScannerBase` sealed class so `AiGuard` accepts either in one list.
+- **`ScanResult.block()` / `.warn()`** — named constructors that parallel the
+  existing `.pass()`, reducing boilerplate in custom scanners.
+- **Breaking**: `AiGuard.scanInput`, `scanOutput`, `runInputStage`,
+  `runOutputStage`, and `StreamingAiGuard.scanInput` now return `Future`s.
+  `inputScanners`/`outputScanners` are now typed `List<ScannerBase>`.
+
 ## 0.6.0
 
 - **International PII expansion** — 6 new locales: Brazil (CPF, CNPJ), Mexico

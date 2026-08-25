@@ -42,8 +42,8 @@ class StreamingAiGuard {
   final Pattern boundary;
 
   StreamingAiGuard({
-    List<Scanner> inputScanners = const [],
-    List<Scanner> outputScanners = const [],
+    List<ScannerBase> inputScanners = const [],
+    List<ScannerBase> outputScanners = const [],
     bool failClosed = true,
     this.boundary = '\n',
   }) : _guard = AiGuard(
@@ -53,7 +53,7 @@ class StreamingAiGuard {
         );
 
   /// Scan input only, same as [AiGuard.scanInput].
-  List<ScanResult> scanInput(String text) => _guard.scanInput(text);
+  Future<List<ScanResult>> scanInput(String text) => _guard.scanInput(text);
 
   /// Guarded streaming round-trip.
   ///
@@ -68,7 +68,7 @@ class StreamingAiGuard {
     required String input,
     required Stream<String> Function(String sanitizedInput) llmStream,
   }) async* {
-    final inRun = _guard.runInputStage(input);
+    final inRun = await _guard.runInputStage(input);
     if (inRun.blocker != null) {
       yield GuardedChunk(
         text: '',
@@ -94,7 +94,7 @@ class StreamingAiGuard {
         if (match == null) break;
 
         final segment = content.substring(0, match.end);
-        final result = _scanAndRehydrate(segment, piiMap);
+        final result = await _scanAndRehydrate(segment, piiMap);
         if (result.blocked) {
           yield result;
           return;
@@ -113,7 +113,7 @@ class StreamingAiGuard {
     // Flush remaining buffer.
     final remaining = buffer.toString();
     if (remaining.isNotEmpty) {
-      final result = _scanAndRehydrate(remaining, piiMap);
+      final result = await _scanAndRehydrate(remaining, piiMap);
       yield result;
     }
   }
@@ -130,8 +130,9 @@ class StreamingAiGuard {
     return matches.isEmpty ? null : matches.first;
   }
 
-  GuardedChunk _scanAndRehydrate(String segment, Map<String, String> piiMap) {
-    final outRun = _guard.runOutputStage(segment);
+  Future<GuardedChunk> _scanAndRehydrate(
+      String segment, Map<String, String> piiMap) async {
+    final outRun = await _guard.runOutputStage(segment);
 
     if (outRun.blocker != null) {
       return GuardedChunk(

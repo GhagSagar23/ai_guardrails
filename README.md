@@ -24,8 +24,9 @@
 (`llama.cpp`, `gemma`, ONNX) or cloud (OpenAI, Anthropic, Gemini, your own gateway).
 Compose small, deterministic `Scanner`s into an `AiGuard` and it redacts PII, blocks
 prompt injection and secret leakage on the way **in**, and validates model output on the
-way **out**. No network, no plugins, no isolates — the whole pipeline is synchronous and
-cheap enough to run on the UI isolate.
+way **out**. No network, no plugins, no isolates — built-in scanners are synchronous and
+cheap enough to run on the UI isolate. `AsyncScanner` extends the pipeline for heavier
+work like on-device ML inference.
 
 ### Why on-device
 
@@ -96,9 +97,10 @@ scanner that blocks — the LLM is never called if an input scanner blocks.
 
 The `Scanner` contract is deliberately **pure and synchronous** — no I/O, no async, no
 mutable shared state. This keeps every scanner deterministic, testable in isolation, and
-cheap enough to run on the UI isolate without blocking frames. `AiGuard.run()` is the only
-async surface (because your LLM call is async). `StreamingAiGuard` adds a `Stream`-based
-async layer for chunked responses, but individual scanners remain sync underneath.
+cheap enough to run on the UI isolate without blocking frames. For heavier work (on-device
+ML inference, model loading), `AsyncScanner` provides an async `scanAsync()` method —
+`AiGuard` awaits both types inline in the same pipeline. `StreamingAiGuard` supports both
+as well.
 
 ## Quickstart
 
@@ -484,7 +486,7 @@ A JSON parse error is itself a block. Only `block`/`warn` are meaningful.
 
 ## Write your own scanner
 
-The `Scanner` contract is tiny and frozen — pure and synchronous, no I/O:
+The `Scanner` contract is tiny — pure and synchronous, no I/O:
 
 ```dart
 class UppercaseYell implements Scanner {
@@ -498,18 +500,33 @@ class UppercaseYell implements Scanner {
   ScanResult scan(String text, {ScanStage stage = ScanStage.input}) {
     final yelling = text == text.toUpperCase() && text.length > 20;
     if (!yelling) return ScanResult.pass(name, text);
-    return ScanResult(
-      scanner: name,
-      passed: false,
-      text: text,
-      score: 1.0,
-      reason: 'model is shouting',
-    );
+    return ScanResult.block(name, text, reason: 'model is shouting',
+      findings: [const Finding(type: 'yell.uppercase')]);
   }
 }
 ```
 
-Drop it into `inputScanners` / `outputScanners` alongside the built-ins.
+For scanners that need async work (model inference, I/O), implement `AsyncScanner`:
+
+```dart
+class MyMlScanner implements AsyncScanner {
+  @override
+  String get name => 'my_ml';
+
+  @override
+  Set<ScanStage> get stages => {ScanStage.input};
+
+  @override
+  Future<ScanResult> scanAsync(String text, {ScanStage stage = ScanStage.input}) async {
+    final score = await _runModel(text);
+    if (score < 0.8) return ScanResult.pass(name, text);
+    return ScanResult.block(name, text, score: score, reason: 'ML classifier triggered',
+      findings: [Finding(type: 'ml.detected', confidence: score)]);
+  }
+}
+```
+
+Drop either type into `inputScanners` / `outputScanners` — `AiGuard` handles both.
 
 ## Streaming
 
@@ -603,10 +620,10 @@ Yes. `StreamingAiGuard` wraps any `Stream<String>` and scans per-segment. See th
 No. Zero network calls, zero telemetry, zero runtime dependencies. Everything runs
 on-device. This is by design, not by accident.
 
-**Q: Why are scanners synchronous instead of async?**
+**Q: Why are built-in scanners synchronous?**
 So they can run on the UI isolate without blocking frames, compose deterministically,
-and stay testable without async machinery. If a scanner needed I/O it wouldn't be
-"on-device" anymore.
+and stay testable without async machinery. For heavier work like on-device ML inference,
+implement `AsyncScanner` instead — `AiGuard` awaits both types in the same pipeline.
 
 ## Privacy & telemetry
 
@@ -629,6 +646,9 @@ process boundary. This is a design invariant, not a configuration option.
 
 **Shipped (0.6):** International PII (Brazil, Mexico, Japan, South Korea, Canada,
 Australia), EU country-specific phones (UK/DE/FR/IT/ES), RTL text verified.
+
+**Shipped (0.7):** `AsyncScanner` foundation for on-device ML scanners,
+`ScanResult.block()`/`.warn()` constructors.
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — provider
 wrappers, multi-turn context, and the policy platform.

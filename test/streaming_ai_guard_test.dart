@@ -27,6 +27,20 @@ class _BlockOnWord implements Scanner {
   }
 }
 
+/// A fake async scanner that always passes, tagging the segment it saw.
+class _PassingAsyncScanner extends AsyncScanner {
+  @override
+  String get name => 'async_pass';
+  @override
+  Set<ScanStage> get stages => const {ScanStage.output};
+  @override
+  Future<ScanResult> scanAsync(String text,
+      {ScanStage stage = ScanStage.input}) async {
+    await Future.delayed(const Duration(milliseconds: 1));
+    return ScanResult.pass(name, text);
+  }
+}
+
 /// A fake scanner that blocks on input stage.
 class _InputBlocker implements Scanner {
   @override
@@ -152,13 +166,30 @@ void main() {
       expect(chunks.length, greaterThanOrEqualTo(1));
     });
 
-    test('scanInput delegates to AiGuard', () {
+    test('async scanner in output pipeline yields clean chunks', () async {
+      final guard = StreamingAiGuard(
+        outputScanners: [_PassingAsyncScanner()],
+      );
+      final chunks = await guard
+          .run(
+            input: 'hi',
+            llmStream: (_) => _streamFrom(['Line one\n', 'Line two\n']),
+          )
+          .toList();
+      expect(chunks, isNotEmpty);
+      expect(chunks.every((c) => !c.blocked), isTrue);
+      final text = chunks.map((c) => c.text).join();
+      expect(text, contains('Line one'));
+      expect(text, contains('Line two'));
+    });
+
+    test('scanInput delegates to AiGuard', () async {
       final guard = StreamingAiGuard(
         inputScanners: [
           PiiScanner(action: GuardAction.warn, types: {'email'})
         ],
       );
-      final results = guard.scanInput('test alice@example.com');
+      final results = await guard.scanInput('test alice@example.com');
       expect(results.any((r) => r.hasFindings), isTrue);
     });
   });
