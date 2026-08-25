@@ -149,15 +149,16 @@ class UrlScanner implements Scanner {
 
     if (findings.isEmpty) return ScanResult.pass(name, text);
 
-    final passed = action == GuardAction.warn;
     final kinds = findings.map((f) => f.type).toSet().join(', ');
-    return ScanResult(
-      scanner: name,
-      passed: passed,
-      text: text,
-      score: passed ? 0.5 : 1.0,
+    if (action == GuardAction.warn) {
+      return ScanResult.warn(name, text,
+        findings: findings,
+        reason: 'suspicious URLs detected ($kinds)',
+      );
+    }
+    return ScanResult.block(name, text,
       findings: findings,
-      reason: passed ? 'suspicious URLs detected ($kinds)' : 'blocked: $kinds',
+      reason: 'blocked: $kinds',
     );
   }
 }

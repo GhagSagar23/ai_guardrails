@@ -85,6 +85,26 @@ class ScanResult {
         reason = null,
         redactionMap = const {};
 
+  /// A blocking result.
+  const ScanResult.block(
+    this.scanner,
+    this.text, {
+    required this.findings,
+    this.reason,
+    this.score = 1.0,
+  })  : passed = false,
+        redactionMap = const {};
+
+  /// A non-blocking result that records findings.
+  const ScanResult.warn(
+    this.scanner,
+    this.text, {
+    required this.findings,
+    this.reason,
+    this.score = 0.5,
+  })  : passed = true,
+        redactionMap = const {};
+
   bool get hasFindings => findings.isNotEmpty;
 
   @override

@@ -36,23 +36,11 @@ class TokenLimitScanner implements Scanner {
     final reason = 'token limit exceeded: ~$count tokens > $maxTokens';
 
     if (action == GuardAction.block) {
-      return ScanResult(
-        scanner: name,
-        passed: false,
-        text: text,
-        score: 1.0,
-        findings: [finding],
-        reason: reason,
-      );
+      return ScanResult.block(name, text,
+        findings: [finding], reason: reason);
     }
     // warn (and redact/hash treated as warn)
-    return ScanResult(
-      scanner: name,
-      passed: true,
-      text: text,
-      score: 0.5,
-      findings: [finding],
-      reason: reason,
-    );
+    return ScanResult.warn(name, text,
+      findings: [finding], reason: reason);
   }
 }

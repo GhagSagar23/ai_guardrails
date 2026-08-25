@@ -110,15 +110,17 @@ class CodeExecutionScanner implements Scanner {
 
     if (findings.isEmpty) return ScanResult.pass(name, text);
 
-    final passed = action == GuardAction.warn;
     final kinds = findings.map((f) => f.match).toSet().join(', ');
-    return ScanResult(
-      scanner: name,
-      passed: passed,
-      text: text,
-      score: 1.0,
+    if (action == GuardAction.warn) {
+      return ScanResult.warn(name, text,
+        score: 1.0,
+        findings: findings,
+        reason: 'dangerous code detected: $kinds',
+      );
+    }
+    return ScanResult.block(name, text,
       findings: findings,
-      reason: passed ? 'dangerous code detected: $kinds' : 'blocked: code_exec',
+      reason: 'blocked: code_exec',
     );
   }
 }

@@ -62,20 +62,13 @@ class PiiScanner implements Scanner {
         final kinds = findings.map((f) => f.type).toSet().join(', ');
         final score =
             findings.map((f) => f.confidence).reduce((a, b) => a > b ? a : b);
-        return ScanResult(
-          scanner: name,
-          passed: false,
-          text: text,
+        return ScanResult.block(name, text,
           score: score,
           findings: findings,
           reason: 'blocked: PII detected ($kinds)',
         );
       case GuardAction.warn:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
-          score: 0.5,
+        return ScanResult.warn(name, text,
           findings: findings,
           reason: 'PII detected',
         );

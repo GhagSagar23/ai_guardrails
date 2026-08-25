@@ -81,23 +81,9 @@ class SchemaValidator implements Scanner {
     if (findings.isEmpty) return ScanResult.pass(name, text);
     final reason = 'schema validation failed: ${reasons.join('; ')}';
     if (action == GuardAction.warn) {
-      return ScanResult(
-        scanner: name,
-        passed: true,
-        text: text,
-        score: 0.5,
-        findings: findings,
-        reason: reason,
-      );
+      return ScanResult.warn(name, text, findings: findings, reason: reason);
     }
-    return ScanResult(
-      scanner: name,
-      passed: false,
-      text: text,
-      score: 1.0,
-      findings: findings,
-      reason: reason,
-    );
+    return ScanResult.block(name, text, findings: findings, reason: reason);
   }
 
   bool _typeMatches(String type, Object? value) {

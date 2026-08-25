@@ -1,3 +1,4 @@
+import '../fnv.dart';
 import '../scanner.dart';
 
 /// One secret-detection rule: a dotted `kind` and the pattern that finds it.
@@ -110,38 +111,23 @@ class SecretScanner implements Scanner {
         final kinds = {for (final f in findings) f.type.split('.').last};
         final score =
             findings.map((f) => f.confidence).reduce((a, b) => a > b ? a : b);
-        return ScanResult(
-          scanner: name,
-          passed: false,
-          text: text,
+        return ScanResult.block(name, text,
           score: score,
           findings: findings,
           reason: 'blocked: secret(s) detected: ${kinds.join(', ')}',
         );
       case GuardAction.redact:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: _transform(text, hashed: false),
-          score: 0.5,
+        return ScanResult.warn(name, _transform(text, hashed: false),
           findings: findings,
           reason: 'redacted ${findings.length} secret(s)',
         );
       case GuardAction.hash:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: _transform(text, hashed: true),
-          score: 0.5,
+        return ScanResult.warn(name, _transform(text, hashed: true),
           findings: findings,
           reason: 'hashed ${findings.length} secret(s)',
         );
       case GuardAction.warn:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
-          score: 0.5,
+        return ScanResult.warn(name, text,
           findings: findings,
           reason: 'warning: ${findings.length} secret(s) detected',
         );
@@ -158,7 +144,7 @@ class SecretScanner implements Scanner {
         final prefix = m[0]!.substring(0, localStart);
         final token = m[0]!.substring(localStart);
         final label = rule.kind.toUpperCase();
-        final replacement = hashed ? '[$label:${_fnv1a(token)}]' : '[$label]';
+        final replacement = hashed ? '[$label:${fnv1a(token)}]' : '[$label]';
         return prefix + replacement;
       });
     }
@@ -166,13 +152,3 @@ class SecretScanner implements Scanner {
   }
 }
 
-/// Tiny local FNV-1a (32-bit) → 6 hex chars. Stable, non-cryptographic;
-/// only used to make hashed placeholders deterministic without a dependency.
-String _fnv1a(String s) {
-  var hash = 0x811c9dc5;
-  for (final c in s.codeUnits) {
-    hash ^= c;
-    hash = (hash * 0x01000193) & 0xFFFFFFFF;
-  }
-  return hash.toRadixString(16).padLeft(8, '0').substring(2);
-}

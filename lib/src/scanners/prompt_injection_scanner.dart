@@ -1,3 +1,4 @@
+import '../fnv.dart';
 import '../scanner.dart';
 
 /// One weighted heuristic group used by [PromptInjectionScanner].
@@ -116,10 +117,7 @@ class PromptInjectionScanner implements Scanner {
     switch (action) {
       case GuardAction.block:
         if (score >= threshold) {
-          return ScanResult(
-            scanner: name,
-            passed: false,
-            text: text,
+          return ScanResult.block(name, text,
             score: score,
             findings: findings,
             reason: 'prompt injection score ${score.toStringAsFixed(2)} '
@@ -127,10 +125,7 @@ class PromptInjectionScanner implements Scanner {
                 'signals: ${matched.map((s) => s.name).join(', ')}',
           );
         }
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
+        return ScanResult.warn(name, text,
           score: score,
           findings: findings,
           reason: 'below threshold (${score.toStringAsFixed(2)} < '
@@ -138,10 +133,7 @@ class PromptInjectionScanner implements Scanner {
         );
 
       case GuardAction.warn:
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: text,
+        return ScanResult.warn(name, text,
           score: score,
           findings: findings,
         );
@@ -153,10 +145,7 @@ class PromptInjectionScanner implements Scanner {
             out = out.replaceAll(p, '[INJECTION]');
           }
         }
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: out,
+        return ScanResult.warn(name, out,
           score: score,
           findings: findings,
           reason: 'redacted ${findings.length} injection span(s)',
@@ -168,14 +157,11 @@ class PromptInjectionScanner implements Scanner {
           for (final p in sig.patterns) {
             out = out.replaceAllMapped(
               p,
-              (m) => '[INJECTION:${_fnv1a(m[0]!)}]',
+              (m) => '[INJECTION:${fnv1a(m[0]!)}]',
             );
           }
         }
-        return ScanResult(
-          scanner: name,
-          passed: true,
-          text: out,
+        return ScanResult.warn(name, out,
           score: score,
           findings: findings,
           reason: 'hashed ${findings.length} injection span(s)',
@@ -184,12 +170,3 @@ class PromptInjectionScanner implements Scanner {
   }
 }
 
-/// Tiny local FNV-1a (32-bit) → 6 hex chars. No crypto dependency.
-String _fnv1a(String s) {
-  var h = 0x811c9dc5;
-  for (final c in s.codeUnits) {
-    h ^= c;
-    h = (h * 0x01000193) & 0xFFFFFFFF;
-  }
-  return h.toRadixString(16).padLeft(8, '0').substring(2);
-}

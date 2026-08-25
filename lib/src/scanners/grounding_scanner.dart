@@ -171,17 +171,16 @@ class GroundingScanner implements Scanner {
             ))
         .toList();
 
-    final passed = action == GuardAction.warn;
     final pct = (ratio * 100).toStringAsFixed(0);
     final tPct = (threshold * 100).toStringAsFixed(0);
-    return ScanResult(
-      scanner: name,
-      passed: passed,
-      text: text,
-      score: 1.0 - ratio,
-      findings: findings,
-      reason: '$pct% grounded (threshold $tPct%)',
-    );
+    final reason = '$pct% grounded (threshold $tPct%)';
+    final s = 1.0 - ratio;
+    if (action == GuardAction.warn) {
+      return ScanResult.warn(name, text,
+        score: s, findings: findings, reason: reason);
+    }
+    return ScanResult.block(name, text,
+      score: s, findings: findings, reason: reason);
   }
 
   static Set<String> _contentWords(String text) {

@@ -4,7 +4,9 @@
 
 - **`AsyncScanner`** — async counterpart to `Scanner` for scanners that need
   I/O or model inference (e.g. on-device ML classifiers). Both now implement
-  a shared `ScannerBase` interface so `AiGuard` accepts either in one list.
+  a shared `ScannerBase` sealed class so `AiGuard` accepts either in one list.
+- **`ScanResult.block()` / `.warn()`** — named constructors that parallel the
+  existing `.pass()`, reducing boilerplate in custom scanners.
 - **Breaking**: `AiGuard.scanInput`, `scanOutput`, `runInputStage`,
   `runOutputStage`, and `StreamingAiGuard.scanInput` now return `Future`s.
   `inputScanners`/`outputScanners` are now typed `List<ScannerBase>`.
