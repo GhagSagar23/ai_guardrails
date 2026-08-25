@@ -124,7 +124,7 @@ class Row {
   Row(this.name, this.opsPerSec, this.meanUs, this.mbPerSec);
 }
 
-void main() {
+Future<void> main() async {
   final corpus = buildCorpus();
   final n = corpus.length;
   final byteLens = [for (final s in corpus) utf8.encode(s).length];
@@ -185,13 +185,13 @@ void main() {
   final guard = AiGuard(inputScanners: inputScanners);
   {
     for (var i = 0; i < kWarmup; i++) {
-      for (final r in guard.scanInput(corpus[i % n])) {
+      for (final r in await guard.scanInput(corpus[i % n])) {
         checksum += fold(r);
       }
     }
     final sw = Stopwatch()..start();
     for (var i = 0; i < kIterations; i++) {
-      for (final r in guard.scanInput(corpus[i % n])) {
+      for (final r in await guard.scanInput(corpus[i % n])) {
         checksum += fold(r);
       }
     }
