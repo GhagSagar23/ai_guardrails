@@ -62,7 +62,9 @@ class BannedTopicScanner implements Scanner {
       case GuardAction.block:
         final score = findings.fold<double>(
             0, (a, f) => f.confidence > a ? f.confidence : a);
-        return ScanResult.block(name, text,
+        return ScanResult.block(
+          name,
+          text,
           score: score,
           findings: findings,
           reason: 'banned topic(s): ${matched.join(', ')}',
@@ -72,17 +74,20 @@ class BannedTopicScanner implements Scanner {
         for (final p in _patterns) {
           out = out.replaceAllMapped(p, (_) => '[TOPIC]');
         }
-        return ScanResult.warn(name, out,
+        return ScanResult.warn(
+          name,
+          out,
           findings: findings,
           reason: 'redacted ${findings.length} topic match(es)',
         );
       case GuardAction.hash:
         var out = text;
         for (final p in _patterns) {
-          out =
-              out.replaceAllMapped(p, (m) => '[TOPIC:${fnv1a(m.group(0)!)}]');
+          out = out.replaceAllMapped(p, (m) => '[TOPIC:${fnv1a(m.group(0)!)}]');
         }
-        return ScanResult.warn(name, out,
+        return ScanResult.warn(
+          name,
+          out,
           findings: findings,
           reason: 'hashed ${findings.length} topic match(es)',
         );
@@ -91,4 +96,3 @@ class BannedTopicScanner implements Scanner {
     }
   }
 }
-

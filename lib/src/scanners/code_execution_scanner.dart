@@ -112,13 +112,17 @@ class CodeExecutionScanner implements Scanner {
 
     final kinds = findings.map((f) => f.match).toSet().join(', ');
     if (action == GuardAction.warn) {
-      return ScanResult.warn(name, text,
+      return ScanResult.warn(
+        name,
+        text,
         score: 1.0,
         findings: findings,
         reason: 'dangerous code detected: $kinds',
       );
     }
-    return ScanResult.block(name, text,
+    return ScanResult.block(
+      name,
+      text,
       findings: findings,
       reason: 'blocked: code_exec',
     );

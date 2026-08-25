@@ -117,7 +117,9 @@ class PromptInjectionScanner implements Scanner {
     switch (action) {
       case GuardAction.block:
         if (score >= threshold) {
-          return ScanResult.block(name, text,
+          return ScanResult.block(
+            name,
+            text,
             score: score,
             findings: findings,
             reason: 'prompt injection score ${score.toStringAsFixed(2)} '
@@ -125,7 +127,9 @@ class PromptInjectionScanner implements Scanner {
                 'signals: ${matched.map((s) => s.name).join(', ')}',
           );
         }
-        return ScanResult.warn(name, text,
+        return ScanResult.warn(
+          name,
+          text,
           score: score,
           findings: findings,
           reason: 'below threshold (${score.toStringAsFixed(2)} < '
@@ -133,7 +137,9 @@ class PromptInjectionScanner implements Scanner {
         );
 
       case GuardAction.warn:
-        return ScanResult.warn(name, text,
+        return ScanResult.warn(
+          name,
+          text,
           score: score,
           findings: findings,
         );
@@ -145,7 +151,9 @@ class PromptInjectionScanner implements Scanner {
             out = out.replaceAll(p, '[INJECTION]');
           }
         }
-        return ScanResult.warn(name, out,
+        return ScanResult.warn(
+          name,
+          out,
           score: score,
           findings: findings,
           reason: 'redacted ${findings.length} injection span(s)',
@@ -161,7 +169,9 @@ class PromptInjectionScanner implements Scanner {
             );
           }
         }
-        return ScanResult.warn(name, out,
+        return ScanResult.warn(
+          name,
+          out,
           score: score,
           findings: findings,
           reason: 'hashed ${findings.length} injection span(s)',
@@ -169,4 +179,3 @@ class PromptInjectionScanner implements Scanner {
     }
   }
 }
-

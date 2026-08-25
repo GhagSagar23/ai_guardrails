@@ -84,10 +84,10 @@ class LanguageScanner implements Scanner {
     final s = 1.0 - ratio;
     if (action == GuardAction.warn) {
       return ScanResult.warn(name, text,
-        score: s, findings: findings, reason: reason);
+          score: s, findings: findings, reason: reason);
     }
     return ScanResult.block(name, text,
-      score: s, findings: findings, reason: reason);
+        score: s, findings: findings, reason: reason);
   }
 
   static UnicodeScript? _classify(int rune) {

@@ -111,23 +111,31 @@ class SecretScanner implements Scanner {
         final kinds = {for (final f in findings) f.type.split('.').last};
         final score =
             findings.map((f) => f.confidence).reduce((a, b) => a > b ? a : b);
-        return ScanResult.block(name, text,
+        return ScanResult.block(
+          name,
+          text,
           score: score,
           findings: findings,
           reason: 'blocked: secret(s) detected: ${kinds.join(', ')}',
         );
       case GuardAction.redact:
-        return ScanResult.warn(name, _transform(text, hashed: false),
+        return ScanResult.warn(
+          name,
+          _transform(text, hashed: false),
           findings: findings,
           reason: 'redacted ${findings.length} secret(s)',
         );
       case GuardAction.hash:
-        return ScanResult.warn(name, _transform(text, hashed: true),
+        return ScanResult.warn(
+          name,
+          _transform(text, hashed: true),
           findings: findings,
           reason: 'hashed ${findings.length} secret(s)',
         );
       case GuardAction.warn:
-        return ScanResult.warn(name, text,
+        return ScanResult.warn(
+          name,
+          text,
           findings: findings,
           reason: 'warning: ${findings.length} secret(s) detected',
         );
@@ -151,4 +159,3 @@ class SecretScanner implements Scanner {
     return out;
   }
 }
-

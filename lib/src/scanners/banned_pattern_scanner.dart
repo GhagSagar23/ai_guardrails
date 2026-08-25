@@ -44,22 +44,30 @@ class BannedPatternScanner implements Scanner {
 
     switch (action) {
       case GuardAction.block:
-        return ScanResult.block(name, text,
+        return ScanResult.block(
+          name,
+          text,
           findings: findings,
           reason: 'blocked: ${findings.length} banned pattern(s) matched',
         );
       case GuardAction.redact:
-        return ScanResult.warn(name, _transform(text, hashed: false),
+        return ScanResult.warn(
+          name,
+          _transform(text, hashed: false),
           findings: findings,
           reason: 'redacted ${findings.length} banned pattern(s)',
         );
       case GuardAction.hash:
-        return ScanResult.warn(name, _transform(text, hashed: true),
+        return ScanResult.warn(
+          name,
+          _transform(text, hashed: true),
           findings: findings,
           reason: 'hashed ${findings.length} banned pattern(s)',
         );
       case GuardAction.warn:
-        return ScanResult.warn(name, text,
+        return ScanResult.warn(
+          name,
+          text,
           findings: findings,
           reason: 'warning: ${findings.length} banned pattern(s) matched',
         );
@@ -77,4 +85,3 @@ class BannedPatternScanner implements Scanner {
     return out;
   }
 }
-

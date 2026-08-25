@@ -59,9 +59,9 @@ class RepetitionScanner implements Scanner {
         '${(score * 100).toStringAsFixed(0)}% repetition (threshold ${(threshold * 100).toStringAsFixed(0)}%)';
     if (action == GuardAction.warn) {
       return ScanResult.warn(name, text,
-        score: score, findings: findings, reason: reason);
+          score: score, findings: findings, reason: reason);
     }
     return ScanResult.block(name, text,
-      score: score, findings: findings, reason: reason);
+        score: score, findings: findings, reason: reason);
   }
 }

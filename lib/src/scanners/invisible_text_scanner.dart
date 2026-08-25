@@ -78,17 +78,23 @@ class InvisibleTextScanner implements Scanner {
 
     switch (action) {
       case GuardAction.block:
-        return ScanResult.block(name, text,
+        return ScanResult.block(
+          name,
+          text,
           findings: findings,
           reason: 'found ${findings.length} invisible character(s)',
         );
       case GuardAction.warn:
-        return ScanResult.warn(name, text,
+        return ScanResult.warn(
+          name,
+          text,
           findings: findings,
           reason: 'found ${findings.length} invisible character(s)',
         );
       case GuardAction.redact:
-        return ScanResult.warn(name, _rewrite(text, (_, __) => ''),
+        return ScanResult.warn(
+          name,
+          _rewrite(text, (_, __) => ''),
           findings: findings,
           reason: 'stripped ${findings.length} invisible character(s)',
         );
@@ -115,4 +121,3 @@ class InvisibleTextScanner implements Scanner {
     return buf.toString();
   }
 }
-
