@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0
+
+- **`GuardSession`** — stateful multi-turn wrapper around `AiGuard`. Tracks
+  turn count, accumulates per-scanner and per-finding-type counts across a
+  conversation, exposes `turnHistory` and `lastOutcome`.
+- **`EscalationPolicy`** — configurable escalation with `blockThreshold` and
+  `terminateThreshold`. Three levels: `warn` (default) → `block` (force-block
+  turns with findings) → `terminate` (refuse all further runs). No policy =
+  no escalation (backward-compatible).
+- **`EscalationLevel`** enum — `warn`, `block`, `terminate`.
+
 ## 0.7.5
 
 - **`ToolCallScanner`** — validates LLM-emitted tool/function calls for agentic
