@@ -177,4 +177,143 @@ void main() {
       expect(() => session.findingCounts['x'] = 1, throwsUnsupportedError);
     });
   });
+
+  group('GuardSession — escalation policies', () {
+    Future<String> stubLlm(String input) async => 'ok: $input';
+    const secret = 'key AKIAIOSFODNN7EXAMPLE';
+
+    test('escalationLevel starts at warn', () {
+      final session = GuardSession(
+        guard: AiGuard(),
+        escalationPolicy: const EscalationPolicy(),
+      );
+      expect(session.escalationLevel, EscalationLevel.warn);
+    });
+
+    test('no policy means no escalation', () async {
+      final session = GuardSession(
+        guard: AiGuard(inputScanners: [SecretScanner()]),
+      );
+      for (var i = 0; i < 10; i++) {
+        await session.run(input: secret, llmCall: stubLlm);
+      }
+      expect(session.escalationLevel, EscalationLevel.warn);
+    });
+
+    test('escalates to block after blockThreshold', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 2, terminateThreshold: 10),
+      );
+      // First run: findings accumulate but still under threshold
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.warn);
+      // Second run: total findings >= 2
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.block);
+    });
+
+    test('block level force-blocks outcomes with findings', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 100),
+      );
+      // First run escalates to block
+      final first = await session.run(input: secret, llmCall: stubLlm);
+      expect(first.blocked, isFalse); // warn mode, not blocked yet
+      expect(session.escalationLevel, EscalationLevel.block);
+      // Second run: force-blocked by escalation
+      final second = await session.run(input: secret, llmCall: stubLlm);
+      expect(second.blocked, isTrue);
+      expect(second.blockReason, contains('Escalation policy'));
+    });
+
+    test('block level passes clean turns', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 100),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.block);
+      // Clean input at block level still passes
+      final clean = await session.run(input: 'hello', llmCall: stubLlm);
+      expect(clean.blocked, isFalse);
+    });
+
+    test('escalates to terminate after terminateThreshold', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.terminate);
+    });
+
+    test('terminated session refuses run', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.terminate);
+      // All subsequent runs immediately blocked
+      final refused = await session.run(input: 'clean', llmCall: stubLlm);
+      expect(refused.blocked, isTrue);
+      expect(refused.blockReason, contains('terminated'));
+    });
+
+    test('terminated session still increments turnCount', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: secret, llmCall: stubLlm);
+      final countBefore = session.turnCount;
+      await session.run(input: 'x', llmCall: stubLlm);
+      expect(session.turnCount, countBefore + 1);
+    });
+
+    test('reset clears escalation level', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: secret, llmCall: stubLlm);
+      expect(session.escalationLevel, EscalationLevel.terminate);
+      session.reset();
+      expect(session.escalationLevel, EscalationLevel.warn);
+    });
+
+    test('force-blocked outcome preserves scanner results', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 100),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      final forced = await session.run(input: secret, llmCall: stubLlm);
+      expect(forced.blocked, isTrue);
+      expect(forced.inputResults, isNotEmpty);
+      expect(forced.allFindings, isNotEmpty);
+    });
+  });
 }
