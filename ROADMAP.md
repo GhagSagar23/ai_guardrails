@@ -77,6 +77,26 @@ independent packages. More pub.dev entries = more discoverability.
 
 ---
 
+## Phase 0.7.5 — Tool-call validation
+
+Agentic AI is the dominant growth pattern. Every framework (LangChain, CrewAI,
+OpenAI Agents) emits tool calls — none validated by default.
+
+### `ToolCallScanner`
+
+- [ ] Validate LLM-emitted function calls before execution
+- [ ] Tool name allowlist / denylist enforcement
+- [ ] Argument validation against declared JSON Schema
+- [ ] Injection detection in string arguments (reuses `CodeExecutionScanner` patterns)
+- [ ] Recursive depth / nesting limits for tool chains
+
+### Design constraint
+
+Pure validation logic — no LLM or ML dependency. Fits the existing `Scanner`
+contract. The schema definitions are caller-provided, not bundled.
+
+---
+
 ## Phase 0.8 — Multi-turn context
 
 Real LLM apps are conversational. Scanners today see one string in isolation.
@@ -98,6 +118,55 @@ Real LLM apps are conversational. Scanners today see one string in isolation.
 `Scanner` stays stateless and synchronous — the composability guarantee is
 non-negotiable. `GuardSession` is orchestration at the same level as `AiGuard`,
 not a new scanner contract. No base class changes.
+
+---
+
+## Phase 0.8.5 — Retrieval / RAG stage
+
+RAG apps assemble prompts from retrieved documents. Poisoned or irrelevant
+chunks entering the prompt is a real attack surface.
+
+### `AiGuard.runRetrievalStage()`
+
+- [ ] New pipeline stage: scan retrieved chunks before prompt assembly
+- [ ] Reuses existing scanners (PII in docs, injection in chunks, secrets in KB content)
+- [ ] Per-chunk pass/fail with reason — drop poisoned chunks, keep clean ones
+- [ ] Optional relevance threshold via `GroundingScanner`
+
+### Design constraint
+
+No new scanners required — the stage is a pipeline addition, not a scanner
+addition. Chunks are scanned independently; the stage returns a filtered list.
+
+---
+
+## Phase 0.8.7 — LLM-assisted scanners
+
+The heuristic scanners cover pattern-matching. For semantic judgments
+(hallucination, factual consistency, topic adherence), the user's own LLM is
+the detection engine.
+
+**This is distinct from on-device ML** (which remains deferred). LLM-assisted
+scanners are prompt templates + orchestration logic executed via a
+caller-provided callback. No model weights, no FFI, no tflite.
+
+### `LlmCallback`
+
+- [ ] `typedef LlmCallback = Future<String> Function(String prompt)`
+- [ ] User provides their own LLM call — package provides the prompt templates
+- [ ] Injected at `AiGuard` construction, passed to scanners that need it
+
+### Scanners
+
+- [ ] `HallucinationScanner` — sample N completions, cross-check consistency (SelfCheckGPT-style)
+- [ ] `FactCheckScanner` — NLI-style "does the output follow from the provided context?"
+- [ ] `TopicSafetyScanner` — LLM judges whether output stays within declared topic bounds
+
+### Design constraint
+
+`Scanner.scan()` stays pure and synchronous for heuristic scanners. LLM-assisted
+scanners implement an `AsyncScanner` variant (already supported by the pipeline).
+The `LlmCallback` is injected, not owned — the package never imports an LLM SDK.
 
 ---
 
@@ -140,6 +209,29 @@ The jump from "scanner collection" to "guardrails platform."
 
 ---
 
+## Phase 0.9.5 — Transform actions & padding attack scanner
+
+Move beyond detect-and-block — allow scanners to actively sanitise content.
+
+### Transform actions
+
+- [ ] `ScanAction.transform` — scanners can suggest content rewrites (beyond PII redaction)
+- [ ] Strip dangerous URLs from output, sanitise code blocks, rewrite tool-call arguments
+- [ ] Scanner contract unchanged — transforms are returned as `ScanResult` metadata, applied by orchestrator
+
+### `PaddingAttackScanner`
+
+- [ ] Shannon entropy floor (detect low-entropy padding designed to exhaust context)
+- [ ] Single-char run ratio detection
+- [ ] Complements existing `TokenLimitScanner` (size) and `RepetitionScanner` (n-grams)
+
+### Design constraint
+
+Pure math — no dependencies. The transform mechanism is orchestrator-level
+(like PII rehydration), not a scanner contract change.
+
+---
+
 ## Explicitly deferred
 
 These are conscious decisions, not oversights.
@@ -162,6 +254,17 @@ the word lists are the caller's responsibility.
 Infrastructure, not guardrails. Mixing concerns weakens the package identity.
 Use `shelf_rate_limiter` or equivalent.
 
+### Server mode / API gateway
+
+Infrastructure concern — a FastAPI-style guardrails server (as NeMo offers) is
+out of scope for a pub.dev package. A `shelf` middleware wrapper is a natural
+companion package if demand emerges.
+
+### Vector DB / embedding integrations
+
+Separate packages with their own versioning. The core package provides the
+scanning pipeline; retrieval and embedding are the caller's domain.
+
 ---
 
 ## Contributing to the roadmap
@@ -173,9 +276,10 @@ Every item above is a valid contribution target. The process:
 2. Discuss scope and approach in the issue
 3. Fork, implement, PR to `master`
 
-Self-contained items (new PII locale, new scanner, provider wrapper) are ideal
-first contributions. Cross-cutting items (streaming, policy engine) benefit from
-design discussion in the issue first.
+Self-contained items (new PII locale, new scanner, provider wrapper, tool-call
+validator) are ideal first contributions. Cross-cutting items (LLM-assisted
+scanners, retrieval stage, policy engine) benefit from design discussion in the
+issue first.
 
 ### Guiding principles
 
