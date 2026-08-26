@@ -3,6 +3,7 @@ description: >-
   Provider wrapper for google_generative_ai — GuardedGenerativeModel that runs
   input/output through AiGuard automatically.
 version: 0.1.0
+homepage: https://github.com/GhagSagar23/ai_guardrails
 repository: https://github.com/GhagSagar23/ai_guardrails/tree/master/packages/ai_guardrails_google
 issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
 topics:
