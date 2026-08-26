@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import '../scanner.dart';
+import 'code_execution_scanner.dart';
+import 'prompt_injection_scanner.dart';
 
 /// A tool/function call emitted by an LLM.
 class ToolCall {
@@ -52,11 +54,16 @@ class ToolCallScanner implements Scanner {
   /// Tools without an entry here skip argument validation.
   final Map<String, Map<String, dynamic>>? toolSchemas;
 
+  /// When true, string argument values are scanned for injection patterns
+  /// (shell, SQL, code, prompt injection). Walks nested maps/lists.
+  final bool scanArguments;
+
   ToolCallScanner({
     this.action = GuardAction.block,
     this.allowedTools,
     this.deniedTools,
     this.toolSchemas,
+    this.scanArguments = true,
   });
 
   @override
@@ -95,6 +102,10 @@ class ToolCallScanner implements Scanner {
         if (schema != null) {
           _validateArgs(call, schema, findings);
         }
+      }
+
+      if (scanArguments) {
+        _scanArgInjection(call, findings);
       }
     }
 
@@ -153,6 +164,65 @@ class ToolCallScanner implements Scanner {
         'boolean' => value is bool,
         _ => true,
       };
+
+  static void _scanArgInjection(ToolCall call, List<Finding> findings) {
+    final strings = <(String, String)>[];
+    for (final e in call.arguments.entries) {
+      _collectStrings(e.value, '${call.name}.${e.key}', strings);
+    }
+
+    for (final (path, value) in strings) {
+      final seen = <String>{};
+
+      for (final p in CodeExecutionScanner.patterns) {
+        final tag = _injectionTag(p.category);
+        if (seen.contains(tag)) continue;
+        if (p.regex.hasMatch(value)) {
+          seen.add(tag);
+          findings.add(Finding(
+            type: 'tool_call.arg_injection.$tag',
+            match: path,
+          ));
+        }
+      }
+
+      if (!seen.contains('prompt')) {
+        for (final sig in kInjectionSignals) {
+          if (sig.patterns.any((p) => p.hasMatch(value))) {
+            findings.add(Finding(
+              type: 'tool_call.arg_injection.prompt',
+              match: path,
+            ));
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  static String _injectionTag(CodeCategory c) => switch (c) {
+        CodeCategory.shell || CodeCategory.filesystem => 'shell',
+        CodeCategory.sql => 'sql',
+        CodeCategory.injection => 'code',
+      };
+
+  static void _collectStrings(
+    Object? value,
+    String path,
+    List<(String, String)> out,
+  ) {
+    if (value is String) {
+      out.add((path, value));
+    } else if (value is Map) {
+      for (final e in value.entries) {
+        _collectStrings(e.value, '$path.${e.key}', out);
+      }
+    } else if (value is List) {
+      for (var i = 0; i < value.length; i++) {
+        _collectStrings(value[i], '$path[$i]', out);
+      }
+    }
+  }
 
   /// Parse JSON text into a list of [ToolCall]s.
   ///
