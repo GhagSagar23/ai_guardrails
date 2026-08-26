@@ -90,6 +90,85 @@ class GuardedGenerativeModel {
     );
   }
 
+  /// Guarded version of [GenerativeModel.generateContentStream].
+  ///
+  /// Input scanning is identical to [generateContent]. Output chunks are
+  /// buffered and scanned at [boundary] splits (default: newline). On block,
+  /// the stream terminates (throw or final blocked chunk, per [OnBlock]).
+  Stream<GuardedChunk> generateContentStream(
+    Iterable<Content> prompt, {
+    List<SafetySetting>? safetySettings,
+    GenerationConfig? generationConfig,
+    List<Tool>? tools,
+    ToolConfig? toolConfig,
+    Pattern boundary = '\n',
+  }) async* {
+    final inputText = _extractText(prompt);
+    final inputRun = await _guard.runInputStage(inputText);
+    if (inputRun.blocker != null) {
+      final reason = inputRun.blocker!.reason ?? 'Input blocked';
+      if (_onBlock == OnBlock.throwException) {
+        throw GuardBlockedException(stage: ScanStage.input, reason: reason);
+      }
+      yield GuardedChunk(text: '', blocked: true, blockReason: reason);
+      return;
+    }
+
+    final callPrompt = inputRun.text != inputText
+        ? _rebuildContent(prompt, inputText, inputRun.text)
+        : prompt;
+    final piiMap = inputRun.redactionMap;
+
+    final stream = _model.generateContentStream(
+      callPrompt,
+      safetySettings: safetySettings,
+      generationConfig: generationConfig,
+      tools: tools,
+      toolConfig: toolConfig,
+    );
+
+    final buffer = StringBuffer();
+
+    await for (final response in stream) {
+      final chunk = response.text ?? '';
+      if (chunk.isEmpty) continue;
+      buffer.write(chunk);
+
+      final content = buffer.toString();
+      final idx = _boundaryIndex(content, boundary);
+      if (idx < 0) continue;
+
+      final segment = content.substring(0, idx);
+      final remainder = content.substring(idx);
+      buffer
+        ..clear()
+        ..write(remainder);
+
+      final result = await _scanSegment(segment, piiMap);
+      if (result.blocked) {
+        if (_onBlock == OnBlock.throwException) {
+          throw GuardBlockedException(
+              stage: ScanStage.output,
+              reason: result.blockReason ?? 'Output blocked');
+        }
+        yield result;
+        return;
+      }
+      yield result;
+    }
+
+    final remaining = buffer.toString();
+    if (remaining.isNotEmpty) {
+      final result = await _scanSegment(remaining, piiMap);
+      if (result.blocked && _onBlock == OnBlock.throwException) {
+        throw GuardBlockedException(
+            stage: ScanStage.output,
+            reason: result.blockReason ?? 'Output blocked');
+      }
+      yield result;
+    }
+  }
+
   /// Pass-through to [GenerativeModel.countTokens].
   Future<CountTokensResponse> countTokens(
     Iterable<Content> contents, {
@@ -124,6 +203,33 @@ class GuardedGenerativeModel {
       inputResults: inputResults,
       outputResults: outputResults,
     );
+  }
+
+  Future<GuardedChunk> _scanSegment(
+      String segment, Map<String, String> piiMap) async {
+    final outRun = await _guard.runOutputStage(segment);
+    if (outRun.blocker != null) {
+      return GuardedChunk(
+        text: segment,
+        blocked: true,
+        blockReason: outRun.blocker!.reason,
+        findings: outRun.results.expand((r) => r.findings).toList(),
+      );
+    }
+    var text = outRun.text;
+    for (final entry in piiMap.entries) {
+      text = text.replaceAll(entry.key, entry.value);
+    }
+    return GuardedChunk(
+      text: text,
+      findings: outRun.results.expand((r) => r.findings).toList(),
+    );
+  }
+
+  static int _boundaryIndex(String content, Pattern boundary) {
+    if (boundary is String) return content.indexOf(boundary);
+    final match = (boundary as RegExp).firstMatch(content);
+    return match?.end ?? -1;
   }
 
   static String _extractText(Iterable<Content> contents) {
