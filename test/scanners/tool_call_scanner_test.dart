@@ -676,4 +676,81 @@ void main() {
       expect(r.passed, isTrue);
     });
   });
+
+  group('ToolCallScanner — edge cases', () {
+    test('all four capabilities fire on one call', () {
+      final s = ToolCallScanner(
+        deniedTools: {'bad'},
+        toolSchemas: {
+          'bad': {
+            'type': 'object',
+            'required': ['x'],
+            'properties': {
+              'cmd': {'type': 'number'},
+            },
+          },
+        },
+        maxDepth: 1,
+        callStack: ['bad'],
+      );
+      final r = s.scan(jsonEncode({
+        'name': 'bad',
+        'arguments': {'cmd': 'rm -rf /'},
+      }));
+      expect(r.passed, isFalse);
+      final types = r.findings.map((f) => f.type).toSet();
+      expect(types, contains('tool_call.max_depth_exceeded'));
+      expect(types, contains('tool_call.circular_reference'));
+      expect(types, contains('tool_call.denied_name'));
+      expect(types, contains('tool_call.arg_missing_required'));
+      expect(types, contains('tool_call.arg_type_mismatch'));
+      expect(types, contains('tool_call.arg_injection.shell'));
+    });
+
+    test('deeply nested string value is detected', () {
+      final s = ToolCallScanner();
+      final r = s.scan(jsonEncode({
+        'name': 'deep',
+        'arguments': {
+          'a': {
+            'b': {
+              'c': [
+                'safe',
+                {'d': 'eval("pwned")'},
+              ],
+            },
+          },
+        },
+      }));
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.arg_injection.code');
+      expect(r.findings.first.match, 'deep.a.b.c[1].d');
+    });
+
+    test('ToolCall.toString includes name and arg keys', () {
+      final tc = ToolCall(name: 'search', arguments: {'q': 'dart', 'n': 5});
+      expect(tc.toString(), contains('search'));
+      expect(tc.toString(), contains('q'));
+    });
+
+    test('single JSON object not wrapped in array', () {
+      final s = ToolCallScanner(allowedTools: {'ping'});
+      final r = s.scan('{"name":"ping","arguments":{}}');
+      expect(r.passed, isTrue);
+    });
+
+    test('JSON number top-level blocks as malformed', () {
+      final s = ToolCallScanner();
+      final r = s.scan('42');
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.malformed');
+    });
+
+    test('JSON string top-level blocks as malformed', () {
+      final s = ToolCallScanner();
+      final r = s.scan('"just a string"');
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.malformed');
+    });
+  });
 }

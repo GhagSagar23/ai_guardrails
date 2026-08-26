@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.5
+
+- **`ToolCallScanner`** — validates LLM-emitted tool/function calls for agentic
+  pipelines. Four layers: name allow/deny lists, per-tool argument JSON Schema
+  validation, injection detection (shell/SQL/code/prompt in string args), and
+  recursive depth/circular-reference limits. Accepts single objects or arrays.
+  Malformed JSON is blocked (fail-closed).
+- **`ToolCall`** — data class for parsed tool calls with `fromJson`/`toJson`
+  and `parseToolCalls` static helper.
+- **`CodePattern`** / `CodeExecutionScanner.patterns` — code-execution patterns
+  now public for reuse by downstream scanners.
+
 ## 0.7.0
 
 - **`AsyncScanner`** — async counterpart to `Scanner` for scanners that need

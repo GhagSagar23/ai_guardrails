@@ -61,6 +61,8 @@ inference cost.
   `eval()`) before it reaches execution with `CodeExecutionScanner`
 - **Streaming completions** — scan token-by-token output in real time with
   `StreamingAiGuard`, terminate mid-stream on violations
+- **Agentic tool-use pipelines** — validate LLM-emitted function calls against
+  allowlists, JSON schemas, injection patterns, and depth limits with `ToolCallScanner`
 - **Data loss prevention** — detect and block API keys, JWTs, private keys, and other
   secrets in both prompts and responses
 
@@ -235,6 +237,7 @@ throwing scanner instead.
 | **`CodeExecutionScanner`** | output | `block` | dangerous generated code: shell, SQL destruction, eval/exec injection, filesystem deletion |
 | **`GroundingScanner`** | output | `warn` | LLM output not grounded in provided source context (keyword-overlap heuristic) |
 | **`SchemaValidator`** | output | `block` | output that isn't valid JSON matching a minimal JSON-Schema |
+| **`ToolCallScanner`** | output | `block` | LLM-emitted tool/function calls: name allow/deny, arg schema, injection, depth/circular |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
@@ -484,6 +487,50 @@ A JSON parse error is itself a block. Only `block`/`warn` are meaningful.
 
 </details>
 
+<details>
+<summary><strong>ToolCallScanner</strong> — validate LLM-emitted tool/function calls</summary>
+
+```dart
+final scanner = ToolCallScanner(
+  allowedTools: {'search', 'get_weather'},     // only these names permitted
+  deniedTools: {'execute_shell'},              // always rejected
+  toolSchemas: {                               // per-tool argument validation
+    'search': {
+      'type': 'object',
+      'required': ['query'],
+      'properties': {
+        'query': {'type': 'string'},
+        'limit': {'type': 'number'},
+      },
+    },
+  },
+  scanArguments: true,     // scan string args for injection (default)
+  maxCallsPerTurn: 10,     // max tool calls per LLM turn (default)
+  maxDepth: 5,             // max nesting depth (default)
+  callStack: ['parent'],   // caller-maintained chain for depth/circular checks
+);
+
+final r = scanner.scan('{"name": "search", "arguments": {"query": "Dart"}}');
+```
+
+Four layers of validation in one scanner:
+
+1. **Name allow/deny** — `allowedTools` whitelist, `deniedTools` blacklist (deny wins)
+2. **Argument schema** — `toolSchemas` validates `required` keys and `properties` types per tool
+3. **Injection detection** — walks all nested string values checking for shell, SQL, code, and prompt injection (reuses `CodeExecutionScanner` and `PromptInjectionScanner` patterns)
+4. **Depth/circular limits** — `maxCallsPerTurn` caps array size, `maxDepth` + `callStack` cap nesting, circular references detected when a call name appears in the stack
+
+Accepts single JSON objects or arrays. Malformed JSON is blocked (fail-closed). Finding
+types: `tool_call.denied_name`, `tool_call.unknown_name`, `tool_call.malformed`,
+`tool_call.arg_missing_required`, `tool_call.arg_type_mismatch`,
+`tool_call.arg_injection.{shell,sql,code,prompt}`, `tool_call.max_calls_exceeded`,
+`tool_call.max_depth_exceeded`, `tool_call.circular_reference`.
+
+See [`example/tool_call_scanner_example.dart`](example/tool_call_scanner_example.dart) for
+a full runnable example.
+
+</details>
+
 ## Write your own scanner
 
 The `Scanner` contract is tiny — pure and synchronous, no I/O:
@@ -649,6 +696,10 @@ Australia), EU country-specific phones (UK/DE/FR/IT/ES), RTL text verified.
 
 **Shipped (0.7):** `AsyncScanner` foundation for on-device ML scanners,
 `ScanResult.block()`/`.warn()` constructors.
+
+**Shipped (0.7.5):** `ToolCallScanner` for agentic pipelines — name
+allow/deny, argument schema validation, injection detection, depth/circular
+limits.
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — provider
 wrappers, multi-turn context, and the policy platform.
