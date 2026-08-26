@@ -90,8 +90,7 @@ class ToolCallScanner implements Scanner {
         name,
         text,
         findings: findings,
-        reason:
-            'Tool call name violation: '
+        reason: 'Tool call name violation: '
             '${findings.map((f) => '${f.type}(${f.match})').join(', ')}',
       );
     }
@@ -100,8 +99,7 @@ class ToolCallScanner implements Scanner {
       name,
       text,
       findings: findings,
-      reason:
-          'Tool call name violation: '
+      reason: 'Tool call name violation: '
           '${findings.map((f) => '${f.type}(${f.match})').join(', ')}',
     );
   }
