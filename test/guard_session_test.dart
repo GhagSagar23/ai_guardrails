@@ -316,4 +316,87 @@ void main() {
       expect(forced.allFindings, isNotEmpty);
     });
   });
+
+  group('GuardSession — edge cases', () {
+    Future<String> stubLlm(String input) async => 'ok: $input';
+    const secret = 'key AKIAIOSFODNN7EXAMPLE';
+
+    test('session with output scanners accumulates output findings', () async {
+      final session = GuardSession(
+        guard: AiGuard(
+          outputScanners: [
+            CodeExecutionScanner(action: GuardAction.warn),
+          ],
+        ),
+      );
+      await session.run(
+        input: 'generate code',
+        llmCall: (_) async => 'eval("danger")',
+      );
+      expect(session.scannerCounts, contains('code_exec'));
+      expect(session.findingCounts, isNotEmpty);
+    });
+
+    test('reset then re-run accumulates fresh', () async {
+      final session = GuardSession(
+        guard: AiGuard(inputScanners: [SecretScanner()]),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      session.reset();
+      expect(session.turnCount, 0);
+      expect(session.findingCounts, isEmpty);
+      await session.run(input: 'clean', llmCall: stubLlm);
+      expect(session.turnCount, 1);
+      expect(session.findingCounts, isEmpty);
+    });
+
+    test('terminated session records refused turns in history', () async {
+      final session = GuardSession(
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: secret, llmCall: stubLlm);
+      await session.run(input: 'refused', llmCall: stubLlm);
+      expect(session.turnHistory.length, 3);
+      expect(session.turnHistory.last.blocked, isTrue);
+      expect(session.turnHistory.last.blockReason, contains('terminated'));
+    });
+
+    test('multiple sessions share guard but not state', () async {
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final s1 = GuardSession(
+        guard: guard,
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 2),
+      );
+      final s2 = GuardSession(guard: guard);
+      await s1.run(input: secret, llmCall: stubLlm);
+      await s1.run(input: secret, llmCall: stubLlm);
+      expect(s1.escalationLevel, EscalationLevel.terminate);
+      expect(s2.escalationLevel, EscalationLevel.warn);
+      expect(s2.turnCount, 0);
+    });
+
+    test('EscalationPolicy default thresholds', () {
+      const policy = EscalationPolicy();
+      expect(policy.blockThreshold, 3);
+      expect(policy.terminateThreshold, 5);
+    });
+
+    test('scanner-blocked turn still accumulates before escalation', () async {
+      final session = GuardSession(
+        guard: AiGuard(inputScanners: [SecretScanner()]),
+        escalationPolicy:
+            const EscalationPolicy(blockThreshold: 1, terminateThreshold: 10),
+      );
+      final outcome = await session.run(input: secret, llmCall: stubLlm);
+      expect(outcome.blocked, isTrue);
+      expect(session.findingCounts, isNotEmpty);
+      expect(session.escalationLevel, EscalationLevel.block);
+    });
+  });
 }

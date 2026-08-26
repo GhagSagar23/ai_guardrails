@@ -531,6 +531,45 @@ a full runnable example.
 
 </details>
 
+## Multi-turn sessions
+
+`GuardSession` wraps `AiGuard` with mutable state — turn counting, finding
+accumulation, and optional escalation policies. Scanners stay stateless.
+
+```dart
+final session = GuardSession(
+  guard: AiGuard(
+    inputScanners: [SecretScanner(action: GuardAction.warn)],
+  ),
+  escalationPolicy: const EscalationPolicy(
+    blockThreshold: 3,   // warn → block after 3 total findings
+    terminateThreshold: 5, // block → terminate after 5
+  ),
+);
+
+for (final userMsg in conversation) {
+  final outcome = await session.run(input: userMsg, llmCall: myLlm);
+
+  print('turn ${session.turnCount}, level: ${session.escalationLevel}');
+  print('findings so far: ${session.findingCounts}');
+
+  if (outcome.blocked) break;
+}
+
+session.reset(); // reuse for next conversation
+```
+
+Three escalation levels:
+- **warn** (default) — findings pass through as-is
+- **block** — turns with any findings are force-blocked, clean turns still pass
+- **terminate** — all `run()` calls immediately return blocked
+
+Without an `escalationPolicy`, `GuardSession` is just `AiGuard` with turn
+counting and finding accumulation — no behavioral change.
+
+See [`example/guard_session_example.dart`](example/guard_session_example.dart)
+for a runnable multi-turn example with escalation.
+
 ## Write your own scanner
 
 The `Scanner` contract is tiny — pure and synchronous, no I/O:
@@ -701,8 +740,11 @@ Australia), EU country-specific phones (UK/DE/FR/IT/ES), RTL text verified.
 allow/deny, argument schema validation, injection detection, depth/circular
 limits.
 
+**Shipped (0.8):** `GuardSession` stateful multi-turn wrapper — finding
+accumulation, configurable escalation policies (warn → block → terminate).
+
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — provider
-wrappers, multi-turn context, and the policy platform.
+wrappers and the policy platform.
 
 ## Resources
 
