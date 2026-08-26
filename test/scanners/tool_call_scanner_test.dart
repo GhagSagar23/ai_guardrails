@@ -176,4 +176,185 @@ void main() {
       expect(calls[1].arguments, isEmpty);
     });
   });
+
+  group('ToolCallScanner — argument schema validation', () {
+    final schemas = <String, Map<String, dynamic>>{
+      'search': {
+        'type': 'object',
+        'required': ['query'],
+        'properties': {
+          'query': {'type': 'string'},
+          'limit': {'type': 'number'},
+        },
+      },
+      'send_email': {
+        'type': 'object',
+        'required': ['to', 'body'],
+        'properties': {
+          'to': {'type': 'string'},
+          'body': {'type': 'string'},
+          'cc': {'type': 'array'},
+        },
+      },
+    };
+
+    test('passes when args match schema', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {'query': 'dart guardrails', 'limit': 10},
+      }));
+      expect(r.passed, isTrue);
+      expect(r.findings, isEmpty);
+    });
+
+    test('blocks on missing required argument', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {'limit': 5},
+      }));
+      expect(r.passed, isFalse);
+      expect(r.findings.length, 1);
+      expect(r.findings.first.type, 'tool_call.arg_missing_required');
+      expect(r.findings.first.match, 'search.query');
+    });
+
+    test('blocks on type mismatch', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {'query': 123, 'limit': 10},
+      }));
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.arg_type_mismatch');
+      expect(r.findings.first.match, 'search.query');
+    });
+
+    test('multiple schema violations', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'send_email',
+        'arguments': {'cc': 'not-an-array'},
+      }));
+      expect(r.passed, isFalse);
+      final types = r.findings.map((f) => f.type).toSet();
+      expect(types, contains('tool_call.arg_missing_required'));
+      expect(types, contains('tool_call.arg_type_mismatch'));
+    });
+
+    test('skips validation when tool has no schema', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'unknown_tool',
+        'arguments': {'anything': 'goes'},
+      }));
+      expect(r.passed, isTrue);
+    });
+
+    test('skips validation when toolSchemas is null', () {
+      final s = ToolCallScanner();
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {},
+      }));
+      expect(r.passed, isTrue);
+    });
+
+    test('array type validates correctly', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'send_email',
+        'arguments': {
+          'to': 'a@b.com',
+          'body': 'hello',
+          'cc': ['x@y.com'],
+        },
+      }));
+      expect(r.passed, isTrue);
+    });
+
+    test('boolean and object types validate', () {
+      final s = ToolCallScanner(
+        toolSchemas: {
+          'configure': {
+            'type': 'object',
+            'properties': {
+              'enabled': {'type': 'boolean'},
+              'settings': {'type': 'object'},
+            },
+          },
+        },
+      );
+      final r = s.scan(jsonEncode({
+        'name': 'configure',
+        'arguments': {'enabled': 'yes', 'settings': 'nope'},
+      }));
+      expect(r.passed, isFalse);
+      expect(r.findings.length, 2);
+    });
+
+    test('integer type accepts num values', () {
+      final s = ToolCallScanner(
+        toolSchemas: {
+          'count': {
+            'type': 'object',
+            'properties': {
+              'n': {'type': 'integer'},
+            },
+          },
+        },
+      );
+      final r = s.scan(jsonEncode({
+        'name': 'count',
+        'arguments': {'n': 42},
+      }));
+      expect(r.passed, isTrue);
+    });
+
+    test('schema + name violations combined', () {
+      final s = ToolCallScanner(
+        allowedTools: {'search'},
+        toolSchemas: schemas,
+      );
+      final r = s.scan(jsonEncode([
+        {
+          'name': 'search',
+          'arguments': {'limit': 'not-a-number'},
+        },
+        {
+          'name': 'bad_tool',
+          'arguments': {},
+        },
+      ]));
+      expect(r.passed, isFalse);
+      final types = r.findings.map((f) => f.type).toSet();
+      expect(types, contains('tool_call.arg_missing_required'));
+      expect(types, contains('tool_call.arg_type_mismatch'));
+      expect(types, contains('tool_call.unknown_name'));
+    });
+
+    test('warn mode passes with schema findings', () {
+      final s = ToolCallScanner(
+        toolSchemas: schemas,
+        action: GuardAction.warn,
+      );
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {'limit': 5},
+      }));
+      expect(r.passed, isTrue);
+      expect(r.findings, isNotEmpty);
+      expect(r.findings.first.type, 'tool_call.arg_missing_required');
+    });
+
+    test('extra args not in schema pass through', () {
+      final s = ToolCallScanner(toolSchemas: schemas);
+      final r = s.scan(jsonEncode({
+        'name': 'search',
+        'arguments': {'query': 'test', 'bonus': 42},
+      }));
+      expect(r.passed, isTrue);
+    });
+  });
 }
