@@ -15,6 +15,11 @@ topics:
 environment:
   sdk: ^3.5.0
 
+workspace:
+  - packages/ai_guardrails_google
+  - packages/ai_guardrails_anthropic
+  - packages/ai_guardrails_langchain
+
 dev_dependencies:
   lints: ^6.0.0
   test: ^1.25.0

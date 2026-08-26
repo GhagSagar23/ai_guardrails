@@ -1,0 +1,26 @@
+name: ai_guardrails_langchain
+description: >-
+  Guardrails integration for langchain_dart — expose AiGuard scanners as a
+  LangChain chain or tool for pipeline composition.
+version: 0.1.0
+repository: https://github.com/GhagSagar23/ai_guardrails/tree/master/packages/ai_guardrails_langchain
+issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
+topics:
+  - ai
+  - security
+  - guardrails
+  - langchain
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  ai_guardrails: ^0.7.0
+  langchain: ^0.7.6
+  langchain_core: ^0.3.6
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
