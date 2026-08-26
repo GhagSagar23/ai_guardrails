@@ -10,7 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  core:
+    name: Core package
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,5 +20,35 @@ jobs:
           sdk: stable
       - run: dart pub get
       - run: dart format --output=none --set-exit-if-changed .
-      - run: dart analyze
+      - run: dart analyze --fatal-infos
       - run: dart test
+
+  wrappers:
+    name: Wrapper — ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - ai_guardrails_google
+          - ai_guardrails_anthropic
+          - ai_guardrails_langchain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart pub get
+        working-directory: packages/${{ matrix.package }}
+      - run: dart format --output=none --set-exit-if-changed .
+        working-directory: packages/${{ matrix.package }}
+      - run: dart analyze --fatal-infos
+        working-directory: packages/${{ matrix.package }}
+      - name: Run tests
+        working-directory: packages/${{ matrix.package }}
+        run: |
+          if [ -d test ]; then
+            dart test
+          else
+            echo "No tests yet — skipping"
+          fi

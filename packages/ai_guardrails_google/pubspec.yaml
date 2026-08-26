@@ -1,0 +1,26 @@
+name: ai_guardrails_google
+description: >-
+  Provider wrapper for google_generative_ai — GuardedGenerativeModel that runs
+  input/output through AiGuard automatically.
+version: 0.1.0
+repository: https://github.com/GhagSagar23/ai_guardrails/tree/master/packages/ai_guardrails_google
+issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
+topics:
+  - ai
+  - security
+  - guardrails
+  - gemini
+  - google
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  ai_guardrails: ^0.7.0
+  google_generative_ai: ^0.4.6
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
