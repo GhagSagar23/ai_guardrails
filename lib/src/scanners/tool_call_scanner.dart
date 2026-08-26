@@ -45,10 +45,18 @@ class ToolCallScanner implements Scanner {
   /// Tool names that are always rejected, even if in [allowedTools].
   final Set<String>? deniedTools;
 
+  /// Per-tool JSON Schema for argument validation.
+  ///
+  /// Keys are tool names; values are minimal JSON-Schema objects supporting
+  /// `type`, `required`, and `properties` (same subset as [SchemaValidator]).
+  /// Tools without an entry here skip argument validation.
+  final Map<String, Map<String, dynamic>>? toolSchemas;
+
   ToolCallScanner({
     this.action = GuardAction.block,
     this.allowedTools,
     this.deniedTools,
+    this.toolSchemas,
   });
 
   @override
@@ -81,28 +89,70 @@ class ToolCallScanner implements Scanner {
       } else if (allowedTools != null && !allowedTools!.contains(call.name)) {
         findings.add(Finding(type: 'tool_call.unknown_name', match: call.name));
       }
+
+      if (toolSchemas != null) {
+        final schema = toolSchemas![call.name];
+        if (schema != null) {
+          _validateArgs(call, schema, findings);
+        }
+      }
     }
 
     if (findings.isEmpty) return ScanResult.pass(name, text);
 
+    final reason = findings.map((f) => '${f.type}(${f.match})').join(', ');
+
     if (action == GuardAction.warn) {
-      return ScanResult.warn(
-        name,
-        text,
-        findings: findings,
-        reason: 'Tool call name violation: '
-            '${findings.map((f) => '${f.type}(${f.match})').join(', ')}',
-      );
+      return ScanResult.warn(name, text, findings: findings, reason: reason);
     }
 
-    return ScanResult.block(
-      name,
-      text,
-      findings: findings,
-      reason: 'Tool call name violation: '
-          '${findings.map((f) => '${f.type}(${f.match})').join(', ')}',
-    );
+    return ScanResult.block(name, text, findings: findings, reason: reason);
   }
+
+  static void _validateArgs(
+      ToolCall call, Map<String, dynamic> schema, List<Finding> findings) {
+    final args = call.arguments;
+    final prefix = '${call.name}.';
+
+    final required = schema['required'];
+    if (required is List) {
+      for (final k in required) {
+        final key = k.toString();
+        if (!args.containsKey(key)) {
+          findings.add(Finding(
+            type: 'tool_call.arg_missing_required',
+            match: '$prefix$key',
+          ));
+        }
+      }
+    }
+
+    final props = schema['properties'];
+    if (props is Map) {
+      for (final entry in props.entries) {
+        final key = entry.key.toString();
+        if (!args.containsKey(key)) continue;
+        final spec = entry.value;
+        if (spec is! Map) continue;
+        final pType = spec['type'];
+        if (pType is String && !_typeMatches(pType, args[key])) {
+          findings.add(Finding(
+            type: 'tool_call.arg_type_mismatch',
+            match: '$prefix$key',
+          ));
+        }
+      }
+    }
+  }
+
+  static bool _typeMatches(String type, Object? value) => switch (type) {
+        'object' => value is Map,
+        'array' => value is List,
+        'string' => value is String,
+        'number' || 'integer' => value is num,
+        'boolean' => value is bool,
+        _ => true,
+      };
 
   /// Parse JSON text into a list of [ToolCall]s.
   ///
