@@ -548,4 +548,132 @@ void main() {
       expect(r.passed, isTrue);
     });
   });
+
+  group('ToolCallScanner — depth / nesting limits', () {
+    test('passes when calls count is within limit', () {
+      final s = ToolCallScanner(maxCallsPerTurn: 3);
+      final r = s.scan(jsonEncode([
+        {'name': 'a', 'arguments': {}},
+        {'name': 'b', 'arguments': {}},
+        {'name': 'c', 'arguments': {}},
+      ]));
+      expect(r.passed, isTrue);
+    });
+
+    test('blocks when calls exceed maxCallsPerTurn', () {
+      final s = ToolCallScanner(maxCallsPerTurn: 2);
+      final r = s.scan(jsonEncode([
+        {'name': 'a', 'arguments': {}},
+        {'name': 'b', 'arguments': {}},
+        {'name': 'c', 'arguments': {}},
+      ]));
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.max_calls_exceeded');
+      expect(r.findings.first.match, '3/2');
+    });
+
+    test('passes when depth is within limit', () {
+      final s = ToolCallScanner(maxDepth: 3, callStack: ['a', 'b']);
+      final r = s.scan(jsonEncode({'name': 'c', 'arguments': {}}));
+      expect(r.passed, isTrue);
+    });
+
+    test('blocks when depth meets maxDepth', () {
+      final s = ToolCallScanner(maxDepth: 3, callStack: ['a', 'b', 'c']);
+      final r = s.scan(jsonEncode({'name': 'd', 'arguments': {}}));
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.max_depth_exceeded');
+      expect(r.findings.first.match, '3/3');
+    });
+
+    test('blocks when depth exceeds maxDepth', () {
+      final s = ToolCallScanner(maxDepth: 2, callStack: ['a', 'b', 'c']);
+      final r = s.scan(jsonEncode({'name': 'd', 'arguments': {}}));
+      expect(r.passed, isFalse);
+      final f = r.findings
+          .firstWhere((f) => f.type == 'tool_call.max_depth_exceeded');
+      expect(f.match, '3/2');
+    });
+
+    test('detects circular reference', () {
+      final s = ToolCallScanner(callStack: ['tool_a', 'tool_b']);
+      final r = s.scan(jsonEncode({'name': 'tool_a', 'arguments': {}}));
+      expect(r.passed, isFalse);
+      expect(r.findings.first.type, 'tool_call.circular_reference');
+      expect(r.findings.first.match, 'tool_a');
+    });
+
+    test('no circular when name is not in callStack', () {
+      final s = ToolCallScanner(callStack: ['tool_a', 'tool_b']);
+      final r = s.scan(jsonEncode({'name': 'tool_c', 'arguments': {}}));
+      expect(r.passed, isTrue);
+    });
+
+    test('circular detected per call in array', () {
+      final s = ToolCallScanner(callStack: ['x']);
+      final r = s.scan(jsonEncode([
+        {'name': 'y', 'arguments': {}},
+        {'name': 'x', 'arguments': {}},
+      ]));
+      expect(r.passed, isFalse);
+      final circulars = r.findings
+          .where((f) => f.type == 'tool_call.circular_reference')
+          .toList();
+      expect(circulars.length, 1);
+      expect(circulars.first.match, 'x');
+    });
+
+    test('default maxCallsPerTurn is 10', () {
+      final s = ToolCallScanner();
+      final calls = List.generate(
+        10,
+        (i) => {'name': 'tool_$i', 'arguments': <String, dynamic>{}},
+      );
+      final r = s.scan(jsonEncode(calls));
+      expect(r.passed, isTrue);
+    });
+
+    test('default maxDepth is 5', () {
+      final s = ToolCallScanner(callStack: ['a', 'b', 'c', 'd']);
+      final r = s.scan(jsonEncode({'name': 'e', 'arguments': {}}));
+      expect(r.passed, isTrue);
+    });
+
+    test('warn mode passes with depth/calls findings', () {
+      final s = ToolCallScanner(
+        action: GuardAction.warn,
+        maxCallsPerTurn: 1,
+      );
+      final r = s.scan(jsonEncode([
+        {'name': 'a', 'arguments': {}},
+        {'name': 'b', 'arguments': {}},
+      ]));
+      expect(r.passed, isTrue);
+      expect(r.findings, isNotEmpty);
+      expect(r.findings.first.type, 'tool_call.max_calls_exceeded');
+    });
+
+    test('combined depth + circular + calls violations', () {
+      final s = ToolCallScanner(
+        maxDepth: 1,
+        maxCallsPerTurn: 1,
+        callStack: ['recurse'],
+      );
+      final r = s.scan(jsonEncode([
+        {'name': 'recurse', 'arguments': {}},
+        {'name': 'other', 'arguments': {}},
+      ]));
+      expect(r.passed, isFalse);
+      final types = r.findings.map((f) => f.type).toSet();
+      expect(types, contains('tool_call.max_calls_exceeded'));
+      expect(types, contains('tool_call.max_depth_exceeded'));
+      expect(types, contains('tool_call.circular_reference'));
+    });
+
+    test('empty callStack means no depth or circular issues', () {
+      final s = ToolCallScanner();
+      final r = s.scan(jsonEncode({'name': 'any', 'arguments': {}}));
+      expect(r.passed, isTrue);
+    });
+  });
 }
