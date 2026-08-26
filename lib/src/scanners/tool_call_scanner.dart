@@ -58,12 +58,27 @@ class ToolCallScanner implements Scanner {
   /// (shell, SQL, code, prompt injection). Walks nested maps/lists.
   final bool scanArguments;
 
+  /// Max tool calls allowed in a single LLM turn (JSON array length).
+  final int maxCallsPerTurn;
+
+  /// Max nesting depth for chained tool calls. The caller provides the
+  /// current [callStack]; if `callStack.length >= maxDepth`, all calls
+  /// in this scan are blocked.
+  final int maxDepth;
+
+  /// The chain of tool names that led to this invocation, maintained by
+  /// the orchestrator. Used for depth and circular-reference checks.
+  final List<String> callStack;
+
   ToolCallScanner({
     this.action = GuardAction.block,
     this.allowedTools,
     this.deniedTools,
     this.toolSchemas,
     this.scanArguments = true,
+    this.maxCallsPerTurn = 10,
+    this.maxDepth = 5,
+    this.callStack = const [],
   });
 
   @override
@@ -90,7 +105,28 @@ class ToolCallScanner implements Scanner {
 
     final findings = <Finding>[];
 
+    if (calls.length > maxCallsPerTurn) {
+      findings.add(Finding(
+        type: 'tool_call.max_calls_exceeded',
+        match: '${calls.length}/$maxCallsPerTurn',
+      ));
+    }
+
+    if (callStack.length >= maxDepth) {
+      findings.add(Finding(
+        type: 'tool_call.max_depth_exceeded',
+        match: '${callStack.length}/$maxDepth',
+      ));
+    }
+
     for (final call in calls) {
+      if (callStack.contains(call.name)) {
+        findings.add(Finding(
+          type: 'tool_call.circular_reference',
+          match: call.name,
+        ));
+      }
+
       if (deniedTools != null && deniedTools!.contains(call.name)) {
         findings.add(Finding(type: 'tool_call.denied_name', match: call.name));
       } else if (allowedTools != null && !allowedTools!.contains(call.name)) {
