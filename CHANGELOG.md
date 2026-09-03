@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.1
+
+- **`EscalationRule`** — per-finding-type escalation thresholds. Attach to
+  `EscalationPolicy.typeRules` keyed by exact type (`pii.email`) or glob
+  pattern (`pii.*`) to override global thresholds for specific finding
+  categories.
+- **`EscalationPolicy.window`** — sliding-window escalation. When set, only
+  the last N turns count toward thresholds — older violations decay.
+  Terminated sessions with a window recover after enough cooldown turns.
+  Without a window, escalation remains monotonic (existing behavior).
+- **`GuardSession.onEscalation`** — callback fires on every escalation level
+  change (including de-escalation with window).
+- **`GuardSession.toJson()` / `GuardSession.restore()`** — persist session
+  state across server restarts. Serializes turn count, finding/scanner counts,
+  per-turn snapshots, and escalation level. Text content is never included.
+
 ## 0.8.0
 
 - **`GuardSession`** — stateful multi-turn wrapper around `AiGuard`. Tracks

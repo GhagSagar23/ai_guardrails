@@ -55,63 +55,45 @@ blocks on a later one. Contributions welcome on any item; see
 
 ---
 
-## Phase 0.7 — Provider wrappers
+### 0.7 — Provider wrappers (packaging)
 
-Make adoption frictionless — one import to guard any major LLM SDK.
+Separate pub.dev packages for frictionless SDK adoption. Independent versioning
+so a provider SDK breaking change doesn't cascade.
 
-### Packages
+- `ai_guardrails_google` — `GuardedGenerativeModel` wrapping `google_generative_ai`
+- `ai_guardrails_anthropic` — wrapper for `anthropic_sdk_dart`
+- `ai_guardrails_langchain` — guardrails as a LangChain chain/tool
 
-- [ ] `ai_guardrails_google` — `GuardedGenerativeModel` wrapping `google_generative_ai`
-- [ ] `ai_guardrails_anthropic` — wrapper for `anthropic_sdk_dart`
-- [ ] `ai_guardrails_langchain` — guardrails as a LangChain chain/tool
+### 0.7 — Async scanner contract
 
-### Packaging strategy
+- `AsyncScanner` — async counterpart for scanners needing I/O or model inference
+- `ScannerBase` sealed class unifying `Scanner` / `AsyncScanner`
+- `ScanResult.block()` / `.warn()` named constructors
+- **Breaking**: pipeline methods now return `Future`s
 
-Each wrapper is a **separate pub.dev package** with independent versioning.
-Provider SDKs release on their own cadences — a breaking change in one must not
-force a version bump on the others. Each depends on `ai_guardrails: ^0.x.0` as
-a peer dependency.
+### 0.7.5 — Tool-call validation
 
-Monorepo with path dependencies during development (Melos) is fine; publish as
-independent packages. More pub.dev entries = more discoverability.
+- `ToolCallScanner` — name allow/deny, per-tool JSON Schema validation,
+  injection detection, recursive depth / nesting limits
+- `ToolCall` data class with `fromJson`/`toJson`/`parseToolCalls`
+- `CodePattern` / `CodeExecutionScanner.patterns` made public for reuse
 
----
+### 0.8 — Multi-turn context: GuardSession + escalation
 
-## Phase 0.7.5 — Tool-call validation
+- `GuardSession` wrapping `AiGuard` + mutable session state
+- Turn history, per-type / per-scanner finding accumulation
+- `EscalationPolicy` with global `blockThreshold`/`terminateThreshold`
+- `EscalationLevel` enum: warn → block → terminate
 
-Agentic AI is the dominant growth pattern. Every framework (LangChain, CrewAI,
-OpenAI Agents) emits tool calls — none validated by default.
+### 0.8.1 — Multi-turn context: typed rules, windows, persistence
 
-### `ToolCallScanner`
-
-- [ ] Validate LLM-emitted function calls before execution
-- [ ] Tool name allowlist / denylist enforcement
-- [ ] Argument validation against declared JSON Schema
-- [ ] Injection detection in string arguments (reuses `CodeExecutionScanner` patterns)
-- [ ] Recursive depth / nesting limits for tool chains
-
-### Design constraint
-
-Pure validation logic — no LLM or ML dependency. Fits the existing `Scanner`
-contract. The schema definitions are caller-provided, not bundled.
-
----
-
-## Phase 0.8 — Multi-turn context
-
-Real LLM apps are conversational. Scanners today see one string in isolation.
-
-### `GuardSession`
-
-- [ ] Wraps `AiGuard` + mutable `_SessionState`
-- [ ] Tracks finding counts, escalation level, turn history metadata across turns
-- [ ] `session.run()` delegates to `guard.run()`, then applies escalation logic
-
-### Escalation policies
-
-- [ ] Configurable per-scanner: first violation = warn, second = block, third = terminate
-- [ ] Accumulate findings by type across turns (`pii.*` count, `injection.*` count)
-- [ ] "User asked 3 times for medical advice across 5 messages" as a signal
+- `EscalationRule` — per-finding-type thresholds (`pii.*` → block at 2)
+- `EscalationPolicy.typeRules` — glob-pattern matching (`prefix.*`)
+- `EscalationPolicy.window` — sliding window: only last N turns count,
+  old violations decay, terminated sessions can cool down
+- `GuardSession.onEscalation` — callback on level transitions
+- `GuardSession.toJson()` / `GuardSession.restore()` — persist session
+  state across server restarts (text excluded, escalation metadata only)
 
 ### Design constraint
 
