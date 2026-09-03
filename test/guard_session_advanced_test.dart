@@ -8,12 +8,14 @@ void main() {
   group('EscalationRule — per-type thresholds', () {
     test('type rule triggers block before global threshold', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 100,
           terminateThreshold: 200,
           typeRules: {
-            'secret.*': EscalationRule(blockThreshold: 1, terminateThreshold: 3),
+            'secret.*':
+                EscalationRule(blockThreshold: 1, terminateThreshold: 3),
           },
         ),
       );
@@ -23,12 +25,14 @@ void main() {
 
     test('type rule triggers terminate', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 100,
           terminateThreshold: 200,
           typeRules: {
-            'secret.*': EscalationRule(blockThreshold: 1, terminateThreshold: 2),
+            'secret.*':
+                EscalationRule(blockThreshold: 1, terminateThreshold: 2),
           },
         ),
       );
@@ -39,12 +43,14 @@ void main() {
 
     test('exact type match works', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 100,
           terminateThreshold: 200,
           typeRules: {
-            'secret.aws_access_key': EscalationRule(blockThreshold: 1, terminateThreshold: 3),
+            'secret.aws_access_key':
+                EscalationRule(blockThreshold: 1, terminateThreshold: 3),
           },
         ),
       );
@@ -54,7 +60,8 @@ void main() {
 
     test('non-matching type rule does not trigger', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 100,
           terminateThreshold: 200,
@@ -77,8 +84,10 @@ void main() {
           blockThreshold: 100,
           terminateThreshold: 200,
           typeRules: {
-            'secret.*': EscalationRule(blockThreshold: 1, terminateThreshold: 10),
-            'code_exec.*': EscalationRule(blockThreshold: 10, terminateThreshold: 1),
+            'secret.*':
+                EscalationRule(blockThreshold: 1, terminateThreshold: 10),
+            'code_exec.*':
+                EscalationRule(blockThreshold: 10, terminateThreshold: 1),
           },
         ),
       );
@@ -94,7 +103,8 @@ void main() {
   group('EscalationPolicy.window — sliding window', () {
     test('window limits which turns count', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 2,
           terminateThreshold: 100,
@@ -114,7 +124,8 @@ void main() {
 
     test('window-based escalation de-escalates', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 2,
           terminateThreshold: 100,
@@ -133,7 +144,8 @@ void main() {
 
     test('terminated session with window recovers after cooldown', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 1,
           terminateThreshold: 2,
@@ -152,7 +164,8 @@ void main() {
 
     test('without window, escalation is monotonic', () async {
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 1,
           terminateThreshold: 100,
@@ -172,7 +185,8 @@ void main() {
     test('fires on escalation level change', () async {
       final transitions = <(EscalationLevel, EscalationLevel)>[];
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 1,
           terminateThreshold: 2,
@@ -182,13 +196,15 @@ void main() {
       await session.run(input: secret, llmCall: stubLlm);
       expect(transitions, [(EscalationLevel.warn, EscalationLevel.block)]);
       await session.run(input: secret, llmCall: stubLlm);
-      expect(transitions.last, (EscalationLevel.block, EscalationLevel.terminate));
+      expect(
+          transitions.last, (EscalationLevel.block, EscalationLevel.terminate));
     });
 
     test('does not fire when level stays the same', () async {
       final transitions = <(EscalationLevel, EscalationLevel)>[];
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 100,
           terminateThreshold: 200,
@@ -202,7 +218,8 @@ void main() {
     test('fires on de-escalation with window', () async {
       final transitions = <(EscalationLevel, EscalationLevel)>[];
       final session = GuardSession(
-        guard: AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
+        guard:
+            AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]),
         escalationPolicy: const EscalationPolicy(
           blockThreshold: 1,
           terminateThreshold: 100,
@@ -220,7 +237,8 @@ void main() {
 
   group('GuardSession.toJson / restore', () {
     test('round-trips session state', () async {
-      final guard = AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
       final session = GuardSession(
         guard: guard,
         escalationPolicy: const EscalationPolicy(
@@ -248,7 +266,8 @@ void main() {
     });
 
     test('restored session continues accumulating', () async {
-      final guard = AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
       final session = GuardSession(
         guard: guard,
         escalationPolicy: const EscalationPolicy(
@@ -275,7 +294,8 @@ void main() {
     });
 
     test('restored session preserves escalation level', () async {
-      final guard = AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
       final session = GuardSession(
         guard: guard,
         escalationPolicy: const EscalationPolicy(
@@ -311,7 +331,8 @@ void main() {
     });
 
     test('windowed escalation works after restore', () async {
-      final guard = AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
       final session = GuardSession(
         guard: guard,
         escalationPolicy: const EscalationPolicy(
@@ -337,7 +358,8 @@ void main() {
     });
 
     test('toJson excludes text content', () async {
-      final guard = AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
+      final guard =
+          AiGuard(inputScanners: [SecretScanner(action: GuardAction.warn)]);
       final session = GuardSession(guard: guard);
       await session.run(input: secret, llmCall: stubLlm);
 
