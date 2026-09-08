@@ -103,7 +103,7 @@ not a new scanner contract. No base class changes.
 
 ---
 
-## Phase 0.8.5 — Retrieval / RAG stage
+## Phase 0.8.2 — Retrieval / RAG stage
 
 RAG apps assemble prompts from retrieved documents. Poisoned or irrelevant
 chunks entering the prompt is a real attack surface.
@@ -122,7 +122,7 @@ addition. Chunks are scanned independently; the stage returns a filtered list.
 
 ---
 
-## Phase 0.8.7 — LLM-assisted scanners
+## Phase 0.8.3 — LLM-assisted scanners
 
 The heuristic scanners cover pattern-matching. For semantic judgments
 (hallucination, factual consistency, topic adherence), the user's own LLM is
@@ -152,7 +152,7 @@ The `LlmCallback` is injected, not owned — the package never imports an LLM SD
 
 ---
 
-## Phase 0.9 — Policy platform
+## Phase 0.9.0 — Policy platform
 
 The jump from "scanner collection" to "guardrails platform."
 
@@ -191,7 +191,7 @@ The jump from "scanner collection" to "guardrails platform."
 
 ---
 
-## Phase 0.9.5 — Transform actions & padding attack scanner
+## Phase 0.9.1 — Transform actions & padding attack scanner
 
 Move beyond detect-and-block — allow scanners to actively sanitise content.
 
@@ -218,7 +218,7 @@ Pure math — no dependencies. The transform mechanism is orchestrator-level
 
 These are conscious decisions, not oversights.
 
-### On-device ML scanners
+### On-device ML scanners (Phase 2.0.0)
 
 Not viable in pure Dart today. `tflite_flutter` is Flutter-only (not pure Dart),
 ONNX Runtime has no Dart binding, and shipping FFI-bundled native libs for a
