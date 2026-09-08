@@ -214,6 +214,179 @@ Pure math — no dependencies. The transform mechanism is orchestrator-level
 
 ---
 
+## Phase 1.0 — Active guardrails
+
+The jump from "detect and report" to "detect and correct." These features turn
+ai_guardrails from a scanner collection into an active guardrail that fixes
+problems without the caller writing retry logic.
+
+### Phase 1.0.0 — Configurable on-fail actions per scanner
+
+- [ ] `OnFailAction` enum: `block`, `warn`, `filter`, `fix`, `reask`, `refrain`, `noop`
+- [ ] Per-scanner action configuration at `AiGuard` construction
+- [ ] `ScanResult` carries suggested fix metadata when action is `fix`
+- [ ] Orchestrator applies action (filter removes content, refrain returns empty, etc.)
+
+### Phase 1.0.1 — Re-ask / corrective retry loop
+
+- [ ] `GuardedLlmCall` wrapper — takes `LlmCallback` + `AiGuard`, auto-retries on failure
+- [ ] Configurable `maxReasks` with error feedback injected into retry prompt
+- [ ] Works with both sync and streaming pipelines
+- [ ] Requires `OnFailAction.reask` from Phase 1.0.0
+
+### Phase 1.0.2 — Tool execution output scanning
+
+- [ ] `AiGuard.runToolOutputStage()` — scan tool *results* (not just tool *calls*)
+- [ ] SQL injection, XSS, Jinja template injection detection in tool responses
+- [ ] Complements `ToolCallScanner` (0.7.5) which validates inputs only
+- [ ] Critical for agentic pipelines where tools return untrusted data
+
+### Design constraint
+
+`OnFailAction` is orchestrator-level, like `EscalationPolicy`. Scanners remain
+stateless — they return findings, the orchestrator decides the action. The re-ask
+loop is a convenience wrapper, not a pipeline change.
+
+---
+
+## Phase 1.1 — Format & topic validators
+
+Pure-Dart validators for common output format and topic constraints.
+Ideal community contribution targets.
+
+### Phase 1.1.0 — Format validators
+
+- [ ] `JsonValidator` — well-formed JSON beyond schema (syntax, depth limits)
+- [ ] `HtmlValidator` — tag allowlists, attribute sanitisation
+- [ ] `SqlValidator` — statement type allowlist (SELECT only, no DROP/ALTER)
+- [ ] `UrlFormatValidator` — protocol allowlist, domain allowlist, no credentials
+- [ ] `RangeValidator` — numeric bounds, string length, date ranges
+- [ ] `ChoicesValidator` — output must be one of N allowed values
+
+### Phase 1.1.1 — Positive topic enforcement
+
+- [ ] `TopicAllowlistScanner` — "you may ONLY discuss X, Y, Z"
+- [ ] Keyword + semantic similarity (via `LlmCallback` for semantic mode)
+- [ ] Complements `BannedTopicScanner` (negative blocklist) with positive allowlist
+- [ ] Configurable strictness: keyword-only (zero deps) or LLM-assisted
+
+### Phase 1.1.2 — Brand safety scanners
+
+- [ ] `CompetitorMentionScanner` — configurable competitor name/product lists
+- [ ] `BiasScanner` — demographic bias indicators in generated text
+- [ ] `PolitenessScanner` — tone/register checks (formal, neutral, casual)
+- [ ] `ReadingLevelScanner` — Flesch-Kincaid / Coleman-Liau grade level enforcement
+
+### Design constraint
+
+All format validators are pure Dart, zero dependencies. Brand safety scanners
+may optionally use `LlmCallback` for deeper analysis but must have a heuristic
+fallback that works without it.
+
+---
+
+## Phase 1.2 — Advanced provenance & intelligence
+
+Upgrades to grounding/fact-checking and adversarial testing tooling.
+
+### Phase 1.2.0 — Embedding/NLI-based provenance
+
+- [ ] `EmbeddingGroundingScanner` — cosine similarity between output and source chunks
+- [ ] Accepts caller-provided embedding callback (like `LlmCallback` pattern)
+- [ ] NLI-style entailment check: "does the output follow from the context?"
+- [ ] Upgrades keyword-overlap `GroundingScanner` (0.4) with semantic depth
+
+### Phase 1.2.1 — LLM pipeline caching
+
+- [ ] `GuardCache` — configurable cache for `LlmCallback` and `AsyncScanner` results
+- [ ] Content-hash keyed, TTL-based expiry
+- [ ] Critical once LLM-assisted scanners (0.8.3) land — repeated similar scans are expensive
+- [ ] In-memory default, pluggable backend interface
+
+### Phase 1.2.2 — LLM vulnerability scanning
+
+- [ ] `GuardProbe` — proactive red-teaming tool that attacks the scanner chain
+- [ ] Generates adversarial prompts targeting each scanner's known weaknesses
+- [ ] Reports bypass rate per scanner and overall pipeline resilience score
+- [ ] Extends benchmark harness (0.9.0) from "measure" into "attack"
+
+### Design constraint
+
+Embedding callback follows the same injection pattern as `LlmCallback` — the
+package never imports an embedding SDK. Cache is in-memory by default; users
+bring their own persistence layer.
+
+---
+
+## Phase 1.3 — Observability & UX
+
+Production-grade observability and end-user-facing message support.
+
+### Phase 1.3.0 — OpenTelemetry tracing
+
+- [ ] `GuardTracer` — per-request spans with scanner-level child spans
+- [ ] Trace ID propagation through pipeline stages
+- [ ] Latency distributions, error rates, token usage attributes
+- [ ] OTel semantic conventions for LLM guardrail operations
+- [ ] Pluggable exporter interface (caller provides the OTel SDK)
+
+### Phase 1.3.1 — Multilingual refusal/feedback messages
+
+- [ ] `GuardMessages` — localised user-facing messages per finding type
+- [ ] Ships with 10+ locales (EN, ES, PT, FR, DE, IT, JA, KO, ZH, AR, HI)
+- [ ] Configurable per-scanner message templates
+- [ ] `ScanResult.userMessage(locale)` convenience accessor
+
+### Phase 1.3.2 — Scanner hub / plugin distribution
+
+- [ ] Scanner distribution story via pub.dev companion packages
+- [ ] `ai_guardrails_scanners_brand`, `ai_guardrails_scanners_medical`, etc.
+- [ ] Registry auto-discovers installed scanner packages
+- [ ] Extends scanner registry (0.9.0) with package-level plugin loading
+
+### Design constraint
+
+OTel integration is optional — users who don't use OTel pay zero cost.
+The package provides the instrumentation points; the OTel SDK is the caller's
+dependency. Message bundles are tree-shaken — import only the locales you need.
+
+---
+
+## Phase 1.4 — Infrastructure & ecosystem
+
+Architectural expansions beyond the core library. These are companion
+packages or major scope changes — evaluated based on community demand.
+
+### Phase 1.4.0 — Guard server (shelf middleware)
+
+- [ ] `ai_guardrails_server` — `shelf` middleware wrapping `AiGuard`
+- [ ] OpenAI-compatible `/v1/chat/completions` endpoint with guard injection
+- [ ] Docker-ready, configurable via JSON policy files (0.9.0 format)
+- [ ] Standalone deployment for teams that want guardrails as infrastructure
+
+### Phase 1.4.1 — Remote validation / hosted ML connectors
+
+- [ ] Connector interface for third-party moderation APIs
+- [ ] `ai_guardrails_google` — Google Cloud Text Moderation
+- [ ] `ai_guardrails_perspective` — Perspective API (toxicity scoring)
+- [ ] Companion packages, never in core — keeps zero-dependency guarantee
+
+### Phase 1.4.2 — Conversational flow management
+
+- [ ] Declarative flow definitions for multi-turn conversations
+- [ ] Canonical form mapping (user intent → allowed response paths)
+- [ ] Topic rail enforcement at the conversation level (not just per-turn)
+- [ ] Significant scope expansion — evaluate community demand before committing
+
+### Design constraint
+
+All Phase 1.4 items are companion packages with their own versioning.
+Core `ai_guardrails` never gains a runtime dependency. Server mode uses
+`shelf` (Dart's standard HTTP server library). Remote connectors are
+optional installs.
+
+---
+
 ## Explicitly deferred
 
 These are conscious decisions, not oversights.
@@ -236,11 +409,9 @@ the word lists are the caller's responsibility.
 Infrastructure, not guardrails. Mixing concerns weakens the package identity.
 Use `shelf_rate_limiter` or equivalent.
 
-### Server mode / API gateway
+### ~~Server mode / API gateway~~ → Planned (Phase 1.4.0)
 
-Infrastructure concern — a FastAPI-style guardrails server (as NeMo offers) is
-out of scope for a pub.dev package. A `shelf` middleware wrapper is a natural
-companion package if demand emerges.
+Moved from deferred to roadmap as a `shelf` middleware companion package.
 
 ### Vector DB / embedding integrations
 
