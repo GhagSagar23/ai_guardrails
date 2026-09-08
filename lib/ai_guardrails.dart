@@ -34,3 +34,6 @@ export 'src/scanner_registry.dart';
 export 'src/policy.dart';
 export 'src/policy_profile.dart';
 export 'src/guard_benchmark.dart';
+export 'src/on_fail_action.dart';
+export 'src/guarded_llm_call.dart';
+export 'src/scanners/tool_output_scanner.dart';

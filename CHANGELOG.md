@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.0.0
+
+- **`OnFailAction`** — configurable per-scanner failure strategies at the
+  orchestrator level: `block`, `warn`, `filter`, `fix`, `reask`, `refrain`,
+  `noop`. Configure via `AiGuard(onFailActions: {'pii': OnFailAction.warn})`
+  or JSON config `"onFailActions": {"pii": "warn"}`. Overrides the scanner's
+  own pass/block decision. `filter` clears text, `fix` applies
+  `ScanResult.suggestedFix`, `refrain` returns empty output (graceful
+  refusal), `noop` skips the scanner entirely.
+- **`GuardedLlmCall`** — corrective retry wrapper around `AiGuard`. When
+  output scanners trigger `OnFailAction.reask`, injects error feedback into
+  the prompt and retries the LLM call up to `maxReasks` times. Custom retry
+  prompt via `retryPromptBuilder`. Non-reask failures return immediately.
+- **`ToolOutputScanner`** — detects XSS, server-side template injection
+  (SSTI), path traversal, and SSRF indicators in tool execution results.
+  Walks JSON structures to scan all string values. Complements `ToolCallScanner`
+  (which validates tool inputs) by scanning tool outputs — critical for agentic
+  pipelines where tools return untrusted data.
+- **`AiGuard.runToolOutputStage()`** — scans tool execution results through
+  input scanners before feeding them back to the LLM or user. Returns
+  `ToolOutputResult` with per-tool pass/fail, processed content, and findings.
+- `ScanResult.suggestedFix` — optional replacement text for `OnFailAction.fix`.
+- `GuardOutcome.failAction` — the `OnFailAction` that stopped the pipeline.
+
 ## 0.9.1
 
 - **`GuardAction.transform`** — new action for scanners that rewrite content

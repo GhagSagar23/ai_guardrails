@@ -1,5 +1,6 @@
 import 'guard_log.dart';
 import 'guard_metrics.dart';
+import 'on_fail_action.dart';
 import 'policy.dart';
 import 'scanner.dart';
 import 'scanner_registry.dart';
@@ -35,6 +36,12 @@ class GuardOutcome {
   /// applied across both pipelines. Empty when no transforms occurred.
   final Map<String, String> transformations;
 
+  /// The [OnFailAction] that caused the pipeline to stop, or `null` when
+  /// no on-fail action was applied. [GuardedLlmCall] uses this to decide
+  /// whether to retry ([OnFailAction.reask]) or return a canned response
+  /// ([OnFailAction.refrain]).
+  final OnFailAction? failAction;
+
   /// Per-scanner results for the input pipeline.
   final List<ScanResult> inputResults;
 
@@ -50,6 +57,7 @@ class GuardOutcome {
     this.rawOutput,
     this.piiMap = const {},
     this.transformations = const {},
+    this.failAction,
     this.inputResults = const [],
     this.outputResults = const [],
   });
@@ -84,6 +92,13 @@ class AiGuard {
   /// A matching rule can escalate warnings to blocks.
   final List<PolicyRule> rules;
 
+  /// Per-scanner [OnFailAction] overrides, keyed by scanner name.
+  ///
+  /// When a scanner reports findings, the orchestrator checks this map
+  /// instead of using the scanner's own pass/block decision. Scanners
+  /// not in this map use the default: respect [ScanResult.passed].
+  final Map<String, OnFailAction> onFailActions;
+
   /// Called after every [run] with a structured audit log entry.
   /// Wire to any logging backend. The log contains text hashes, never raw text.
   final void Function(GuardLog log)? onScan;
@@ -97,6 +112,7 @@ class AiGuard {
     this.failClosed = true,
     this.llmCallback,
     this.rules = const [],
+    this.onFailActions = const {},
     this.onScan,
     this.onMetrics,
   }) {
@@ -143,6 +159,9 @@ class AiGuard {
             ?.map((e) => PolicyRule.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
+    final onFail = (config['onFailActions'] as Map<String, dynamic>?)
+            ?.map((k, v) => MapEntry(k, parseOnFailAction(v as String)!)) ??
+        const {};
 
     return AiGuard(
       inputScanners: input,
@@ -150,6 +169,7 @@ class AiGuard {
       failClosed: config['failClosed'] as bool? ?? true,
       llmCallback: llmCallback,
       rules: rules,
+      onFailActions: onFail,
       onScan: onScan,
       onMetrics: onMetrics,
     );
@@ -168,8 +188,8 @@ class AiGuard {
     }
   }
 
-  /// Run [scanners] over [text] for [stage], chaining redactions and stopping
-  /// at the first scanner that blocks.
+  /// Run [scanners] over [text] for [stage], chaining redactions and
+  /// applying [onFailActions] overrides.
   Future<StageRun> _runStage(
       List<ScannerBase> scanners, String text, ScanStage stage) async {
     final results = <ScanResult>[];
@@ -178,6 +198,10 @@ class AiGuard {
     var current = text;
     for (final s in scanners) {
       if (!s.stages.contains(stage)) continue;
+
+      final configured = onFailActions[s.name];
+      if (configured == OnFailAction.noop) continue;
+
       ScanResult r;
       try {
         r = s is AsyncScanner
@@ -193,12 +217,32 @@ class AiGuard {
           reason: 'scanner error: $e',
         );
       }
+
       results.add(r);
       mergedMap.addAll(r.redactionMap);
       mergedTransforms.addAll(r.transformations);
       current = r.text;
-      if (!r.passed) {
-        return StageRun(current, results, r, mergedMap, mergedTransforms);
+
+      final hasIssue = !r.passed || r.hasFindings;
+      if (!hasIssue) continue;
+
+      final action = configured ?? (r.passed ? null : OnFailAction.block);
+      if (action == null) continue;
+
+      switch (action) {
+        case OnFailAction.block || OnFailAction.reask:
+          return StageRun(
+              current, results, r, mergedMap, mergedTransforms, action);
+        case OnFailAction.refrain:
+          return StageRun('', results, r, mergedMap, mergedTransforms, action);
+        case OnFailAction.warn:
+          break;
+        case OnFailAction.filter:
+          current = '';
+        case OnFailAction.fix:
+          if (r.suggestedFix != null) current = r.suggestedFix!;
+        case OnFailAction.noop:
+          break;
       }
     }
 
@@ -216,7 +260,8 @@ class AiGuard {
               '${rule.condition.operator} ${rule.condition.value}',
         );
         results.add(blocker);
-        return StageRun(current, results, blocker, mergedMap, mergedTransforms);
+        return StageRun(current, results, blocker, mergedMap, mergedTransforms,
+            OnFailAction.block);
       }
     }
     return StageRun(current, results, null, mergedMap, mergedTransforms);
@@ -239,6 +284,28 @@ class AiGuard {
   /// Used by [StreamingAiGuard] to scan each chunk.
   Future<StageRun> runOutputStage(String text) async =>
       _runStage(outputScanners, text, ScanStage.output);
+
+  /// Scan tool execution results before feeding them back to the LLM or user.
+  ///
+  /// Each output is scanned independently through [inputScanners] (since
+  /// tool results are untrusted data entering the pipeline). Blocked outputs
+  /// are flagged; clean outputs are returned (possibly redacted).
+  Future<ToolOutputResult> runToolOutputStage(List<ToolOutput> outputs) async {
+    final scans = <ToolOutputScan>[];
+    for (final output in outputs) {
+      final run =
+          await _runStage(inputScanners, output.content, ScanStage.input);
+      scans.add(ToolOutputScan(
+        toolName: output.toolName,
+        originalContent: output.content,
+        processedContent: run.text,
+        passed: run.blocker == null,
+        results: run.results,
+        blockReason: run.blocker?.reason,
+      ));
+    }
+    return ToolOutputResult(scans);
+  }
 
   /// Scan retrieved chunks before prompt assembly.
   ///
@@ -280,12 +347,15 @@ class AiGuard {
 
     if (inRun.blocker != null) {
       wallStart.stop();
+      final isRefrain = inRun.failAction == OnFailAction.refrain;
       final outcome = GuardOutcome(
-        blocked: true,
+        blocked: !isRefrain,
         blockedStage: ScanStage.input,
         blockReason: inRun.blocker!.reason,
         piiMap: inRun.redactionMap,
         transformations: inRun.transformations,
+        failAction: inRun.failAction,
+        output: isRefrain ? '' : null,
         inputResults: inRun.results,
       );
       _emitCallbacks(
@@ -312,13 +382,16 @@ class AiGuard {
 
     if (outRun.blocker != null) {
       wallStart.stop();
+      final isRefrain = outRun.failAction == OnFailAction.refrain;
       final outcome = GuardOutcome(
-        blocked: true,
+        blocked: !isRefrain,
         blockedStage: ScanStage.output,
         blockReason: outRun.blocker!.reason,
         input: inRun.text,
+        output: isRefrain ? '' : null,
         piiMap: inRun.redactionMap,
         transformations: allTransforms,
+        failAction: outRun.failAction,
         inputResults: inRun.results,
         outputResults: outRun.results,
       );
@@ -426,8 +499,9 @@ class StageRun {
   final ScanResult? blocker;
   final Map<String, String> redactionMap;
   final Map<String, String> transformations;
+  final OnFailAction? failAction;
   StageRun(this.text, this.results, this.blocker, this.redactionMap,
-      [this.transformations = const {}]);
+      [this.transformations = const {}, this.failAction]);
 }
 
 /// Scan outcome for a single retrieved chunk.
@@ -483,5 +557,55 @@ class RetrievalResult {
   List<Finding> get allFindings => [
         for (final c in chunks)
           for (final r in c.results) ...r.findings,
+      ];
+}
+
+/// A tool execution result to scan.
+class ToolOutput {
+  final String toolName;
+  final String content;
+  const ToolOutput({required this.toolName, required this.content});
+}
+
+/// Scan outcome for a single tool output.
+class ToolOutputScan {
+  final String toolName;
+  final String originalContent;
+  final String processedContent;
+  final bool passed;
+  final List<ScanResult> results;
+  final String? blockReason;
+
+  const ToolOutputScan({
+    required this.toolName,
+    required this.originalContent,
+    required this.processedContent,
+    required this.passed,
+    this.results = const [],
+    this.blockReason,
+  });
+}
+
+/// Outcome of [AiGuard.runToolOutputStage].
+class ToolOutputResult {
+  final List<ToolOutputScan> scans;
+  const ToolOutputResult(this.scans);
+
+  /// Processed content of tool outputs that passed all scanners.
+  List<String> get safe => [
+        for (final s in scans)
+          if (s.passed) s.processedContent
+      ];
+
+  /// Tool output scans that were blocked.
+  List<ToolOutputScan> get blocked => [
+        for (final s in scans)
+          if (!s.passed) s
+      ];
+
+  /// All findings across every tool output.
+  List<Finding> get allFindings => [
+        for (final s in scans)
+          for (final r in s.results) ...r.findings,
       ];
 }

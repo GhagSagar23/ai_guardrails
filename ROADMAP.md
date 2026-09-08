@@ -216,24 +216,24 @@ problems without the caller writing retry logic.
 
 ### Phase 1.0.0 — Configurable on-fail actions per scanner
 
-- [ ] `OnFailAction` enum: `block`, `warn`, `filter`, `fix`, `reask`, `refrain`, `noop`
-- [ ] Per-scanner action configuration at `AiGuard` construction
-- [ ] `ScanResult` carries suggested fix metadata when action is `fix`
-- [ ] Orchestrator applies action (filter removes content, refrain returns empty, etc.)
+- [x] `OnFailAction` enum: `block`, `warn`, `filter`, `fix`, `reask`, `refrain`, `noop`
+- [x] Per-scanner action configuration at `AiGuard` construction
+- [x] `ScanResult` carries suggested fix metadata when action is `fix`
+- [x] Orchestrator applies action (filter removes content, refrain returns empty, etc.)
 
 ### Phase 1.0.1 — Re-ask / corrective retry loop
 
-- [ ] `GuardedLlmCall` wrapper — takes `LlmCallback` + `AiGuard`, auto-retries on failure
-- [ ] Configurable `maxReasks` with error feedback injected into retry prompt
-- [ ] Works with both sync and streaming pipelines
-- [ ] Requires `OnFailAction.reask` from Phase 1.0.0
+- [x] `GuardedLlmCall` wrapper — takes `LlmCallback` + `AiGuard`, auto-retries on failure
+- [x] Configurable `maxReasks` with error feedback injected into retry prompt
+- [x] Works with both sync and streaming pipelines
+- [x] Requires `OnFailAction.reask` from Phase 1.0.0
 
 ### Phase 1.0.2 — Tool execution output scanning
 
-- [ ] `AiGuard.runToolOutputStage()` — scan tool *results* (not just tool *calls*)
-- [ ] SQL injection, XSS, Jinja template injection detection in tool responses
-- [ ] Complements `ToolCallScanner` (0.7.5) which validates inputs only
-- [ ] Critical for agentic pipelines where tools return untrusted data
+- [x] `AiGuard.runToolOutputStage()` — scan tool *results* (not just tool *calls*)
+- [x] SQL injection, XSS, Jinja template injection detection in tool responses
+- [x] Complements `ToolCallScanner` (0.7.5) which validates inputs only
+- [x] Critical for agentic pipelines where tools return untrusted data
 
 ### Design constraint
 
