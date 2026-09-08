@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.2
+
+- **`AiGuard.runRetrievalStage()`** — new pipeline stage for RAG applications.
+  Scans a list of retrieved chunks through `inputScanners` independently before
+  prompt assembly. Poisoned or policy-violating chunks are dropped; clean ones
+  pass through (possibly redacted). No new scanners required — reuses the
+  existing input scanner chain.
+- **`ChunkResult`** — per-chunk scan outcome: original text, processed text,
+  pass/fail, drop reason, and per-scanner results.
+- **`RetrievalResult`** — wraps all chunk results with convenience getters:
+  `.accepted` (processed text of passing chunks), `.dropped` (blocked chunk
+  results), `.allFindings` (findings aggregated across all chunks).
+
 ## 0.8.1
 
 - **`EscalationRule`** — per-finding-type escalation thresholds. Attach to

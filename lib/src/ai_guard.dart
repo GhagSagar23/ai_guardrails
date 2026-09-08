@@ -190,6 +190,28 @@ class AiGuard {
   Future<StageRun> runOutputStage(String text) async =>
       _runStage(outputScanners, text, ScanStage.output);
 
+  /// Scan retrieved chunks before prompt assembly.
+  ///
+  /// Each chunk is scanned independently through [inputScanners]. Blocked
+  /// chunks are dropped; clean chunks are returned (possibly redacted).
+  /// Use [RetrievalResult.accepted] for the filtered list and
+  /// [RetrievalResult.dropped] to log why chunks were removed.
+  Future<RetrievalResult> runRetrievalStage(List<String> chunks) async {
+    final results = <ChunkResult>[];
+    for (var i = 0; i < chunks.length; i++) {
+      final run = await _runStage(inputScanners, chunks[i], ScanStage.input);
+      results.add(ChunkResult(
+        index: i,
+        originalChunk: chunks[i],
+        processedChunk: run.text,
+        passed: run.blocker == null,
+        results: run.results,
+        dropReason: run.blocker?.reason,
+      ));
+    }
+    return RetrievalResult(results);
+  }
+
   /// Full guarded round-trip: sanitise input, call the LLM, sanitise output.
   ///
   /// The LLM is never called if an input scanner blocks. When input scanners
@@ -429,4 +451,60 @@ class StageRun {
   final ScanResult? blocker;
   final Map<String, String> redactionMap;
   StageRun(this.text, this.results, this.blocker, this.redactionMap);
+}
+
+/// Scan outcome for a single retrieved chunk.
+class ChunkResult {
+  /// Zero-based position in the original list.
+  final int index;
+
+  /// The chunk as it was passed in.
+  final String originalChunk;
+
+  /// The chunk after any redaction/hashing by the scanner chain.
+  final String processedChunk;
+
+  /// `true` when no scanner blocked this chunk.
+  final bool passed;
+
+  /// Per-scanner results for this chunk.
+  final List<ScanResult> results;
+
+  /// The blocking scanner's reason, or `null` when [passed] is `true`.
+  final String? dropReason;
+
+  const ChunkResult({
+    required this.index,
+    required this.originalChunk,
+    required this.processedChunk,
+    required this.passed,
+    this.results = const [],
+    this.dropReason,
+  });
+}
+
+/// Outcome of [AiGuard.runRetrievalStage].
+class RetrievalResult {
+  /// Per-chunk scan outcomes, in the same order as the input list.
+  final List<ChunkResult> chunks;
+
+  const RetrievalResult(this.chunks);
+
+  /// Processed text of chunks that passed all scanners.
+  List<String> get accepted => [
+        for (final c in chunks)
+          if (c.passed) c.processedChunk
+      ];
+
+  /// Chunk results that were blocked by at least one scanner.
+  List<ChunkResult> get dropped => [
+        for (final c in chunks)
+          if (!c.passed) c
+      ];
+
+  /// All findings across every chunk.
+  List<Finding> get allFindings => [
+        for (final c in chunks)
+          for (final r in c.results) ...r.findings,
+      ];
 }
