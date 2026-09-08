@@ -133,9 +133,9 @@ caller-provided callback. No model weights, no FFI, no tflite.
 
 ### Scanners
 
-- [ ] `HallucinationScanner` — sample N completions, cross-check consistency (SelfCheckGPT-style)
-- [ ] `FactCheckScanner` — NLI-style "does the output follow from the provided context?"
-- [ ] `TopicSafetyScanner` — LLM judges whether output stays within declared topic bounds
+- [x] `HallucinationScanner` — sample N completions, cross-check consistency (SelfCheckGPT-style)
+- [x] `FactCheckScanner` — NLI-style "does the output follow from the provided context?"
+- [x] `TopicSafetyScanner` — LLM judges whether output stays within declared topic bounds
 
 ### Design constraint
 
