@@ -243,6 +243,17 @@ throwing scanner instead.
 | **`TopicSafetyScanner`** | input · output | `block` | LLM-judged topic adherence — allowed/forbidden topic lists via `LlmCallback` |
 | **`PaddingAttackScanner`** | input | `block` | Context-exhaustion padding: Shannon entropy floor + single-char run ratio |
 | **`ToolOutputScanner`** | input · output | `block` | XSS, SSTI, path traversal, SSRF indicators in tool execution results |
+| **`JsonValidator`** | output | `block` | Malformed JSON, excessive nesting depth, oversized arrays/objects |
+| **`HtmlValidator`** | output | `block` | Disallowed HTML tags, dangerous attributes/event handlers, javascript: URIs |
+| **`SqlValidator`** | output | `block` | Disallowed SQL statements (default: only SELECT allowed) |
+| **`UrlFormatValidator`** | output | `block` | Disallowed protocols, domains, credentials in URLs |
+| **`RangeValidator`** | output | `block` | Numeric values outside bounds, string length violations |
+| **`ChoicesValidator`** | output | `block` | Output not matching an allowed value set (classification tasks) |
+| **`TopicAllowlistScanner`** | output | `block` | Output off-topic vs. positive allowlist (keyword or LLM-assisted) |
+| **`CompetitorMentionScanner`** | output | `block` | Competitor name/product mentions in generated text |
+| **`BiasScanner`** | output | `warn` | Demographic bias: gender/age/racial generalisations, stereotypes |
+| **`PolitenessScanner`** | output | `warn` | Tone register mismatch (formal/neutral/casual target) |
+| **`ReadingLevelScanner`** | output | `warn` | Reading grade level outside bounds (Flesch-Kincaid + Coleman-Liau) |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn, transform }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
@@ -773,8 +784,14 @@ block/warn/filter/fix/reask/refrain/noop), `GuardedLlmCall` (corrective
 retry loop on `reask`), `ToolOutputScanner` (XSS/SSTI/path-traversal/SSRF
 in tool results), `AiGuard.runToolOutputStage()`.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
-guardrails, format validators, OTel tracing, guard server, and more.
+**Shipped (1.1.0):** 6 format validators (`JsonValidator`, `HtmlValidator`,
+`SqlValidator`, `UrlFormatValidator`, `RangeValidator`, `ChoicesValidator`),
+`TopicAllowlistScanner` (positive topic enforcement), 4 brand safety scanners
+(`CompetitorMentionScanner`, `BiasScanner`, `PolitenessScanner`,
+`ReadingLevelScanner`). 30 built-in scanners total.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 —
+provenance, caching, OTel tracing, guard server, and more.
 
 ## Resources
 

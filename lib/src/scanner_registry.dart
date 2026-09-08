@@ -19,6 +19,17 @@ import 'scanners/padding_attack_scanner.dart';
 import 'scanners/tool_output_scanner.dart';
 import 'scanners/topic_safety_scanner.dart';
 import 'scanners/url_scanner.dart';
+import 'scanners/json_validator.dart';
+import 'scanners/html_validator.dart';
+import 'scanners/sql_validator.dart';
+import 'scanners/url_format_validator.dart';
+import 'scanners/range_validator.dart';
+import 'scanners/choices_validator.dart';
+import 'scanners/topic_allowlist_scanner.dart';
+import 'scanners/competitor_mention_scanner.dart';
+import 'scanners/bias_scanner.dart';
+import 'scanners/politeness_scanner.dart';
+import 'scanners/reading_level_scanner.dart';
 
 /// Creates a [ScannerBase] from a JSON config map.
 typedef ScannerFactory = ScannerBase Function(Map<String, dynamic> config);
@@ -96,6 +107,17 @@ class ScannerRegistry {
     register('hallucination', _buildHallucination);
     register('fact_check', _buildFactCheck);
     register('topic_safety', _buildTopicSafety);
+    register('json_validator', _buildJsonValidator);
+    register('html_validator', _buildHtmlValidator);
+    register('sql_validator', _buildSqlValidator);
+    register('url_format_validator', _buildUrlFormatValidator);
+    register('range_validator', _buildRangeValidator);
+    register('choices_validator', _buildChoicesValidator);
+    register('topic_allowlist', _buildTopicAllowlist);
+    register('competitor_mention', _buildCompetitorMention);
+    register('bias', _buildBias);
+    register('politeness', _buildPoliteness);
+    register('reading_level', _buildReadingLevel);
   }
 
   // -- Built-in factories --
@@ -240,6 +262,95 @@ class ScannerRegistry {
         forbiddenTopics:
             (cfg['forbiddenTopics'] as List?)?.cast<String>() ?? const [],
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildJsonValidator(Map<String, dynamic> cfg) =>
+      JsonValidator(
+        maxDepth: cfg['maxDepth'] as int? ?? 64,
+        maxArrayLength: cfg['maxArrayLength'] as int? ?? 10000,
+        maxKeyCount: cfg['maxKeyCount'] as int? ?? 1000,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildHtmlValidator(Map<String, dynamic> cfg) =>
+      HtmlValidator(
+        allowedTags: (cfg['allowedTags'] as List?)?.cast<String>().toSet(),
+        allowedAttributes:
+            (cfg['allowedAttributes'] as List?)?.cast<String>().toSet(),
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildSqlValidator(Map<String, dynamic> cfg) =>
+      SqlValidator(
+        allowedStatements:
+            (cfg['allowedStatements'] as List?)?.cast<String>().toSet(),
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildUrlFormatValidator(Map<String, dynamic> cfg) =>
+      UrlFormatValidator(
+        allowedProtocols:
+            (cfg['allowedProtocols'] as List?)?.cast<String>().toSet(),
+        allowedDomains:
+            (cfg['allowedDomains'] as List?)?.cast<String>().toSet(),
+        blockCredentials: cfg['blockCredentials'] as bool? ?? true,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildRangeValidator(Map<String, dynamic> cfg) =>
+      RangeValidator(
+        min: (cfg['min'] as num?)?.toDouble(),
+        max: (cfg['max'] as num?)?.toDouble(),
+        minLength: cfg['minLength'] as int?,
+        maxLength: cfg['maxLength'] as int?,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildChoicesValidator(Map<String, dynamic> cfg) =>
+      ChoicesValidator(
+        (cfg['choices'] as List).cast<String>(),
+        caseSensitive: cfg['caseSensitive'] as bool? ?? false,
+        trim: cfg['trim'] as bool? ?? true,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildTopicAllowlist(Map<String, dynamic> cfg) =>
+      TopicAllowlistScanner(
+        allowedTopics:
+            (cfg['allowedTopics'] as List?)?.cast<String>() ?? const [],
+        useLlm: cfg['useLlm'] as bool? ?? false,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildCompetitorMention(Map<String, dynamic> cfg) =>
+      CompetitorMentionScanner(
+        (cfg['competitors'] as List).cast<String>(),
+        caseSensitive: cfg['caseSensitive'] as bool? ?? false,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
+  static ScannerBase _buildBias(Map<String, dynamic> cfg) => BiasScanner(
+        useLlm: cfg['useLlm'] as bool? ?? false,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
+      );
+
+  static ScannerBase _buildPoliteness(Map<String, dynamic> cfg) {
+    final target = cfg['targetRegister'] as String? ?? 'neutral';
+    final register = ToneRegister.values.firstWhere(
+      (r) => r.name == target,
+      orElse: () => ToneRegister.neutral,
+    );
+    return PolitenessScanner(
+      targetRegister: register,
+      action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
+    );
+  }
+
+  static ScannerBase _buildReadingLevel(Map<String, dynamic> cfg) =>
+      ReadingLevelScanner(
+        minGrade: (cfg['minGrade'] as num?)?.toDouble(),
+        maxGrade: (cfg['maxGrade'] as num?)?.toDouble(),
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
       );
 
   static Set<PiiLocale> _parseLocales(dynamic v) {
