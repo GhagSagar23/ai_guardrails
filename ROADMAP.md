@@ -250,26 +250,26 @@ Ideal community contribution targets.
 
 ### Phase 1.1.0 — Format validators
 
-- [ ] `JsonValidator` — well-formed JSON beyond schema (syntax, depth limits)
-- [ ] `HtmlValidator` — tag allowlists, attribute sanitisation
-- [ ] `SqlValidator` — statement type allowlist (SELECT only, no DROP/ALTER)
-- [ ] `UrlFormatValidator` — protocol allowlist, domain allowlist, no credentials
-- [ ] `RangeValidator` — numeric bounds, string length, date ranges
-- [ ] `ChoicesValidator` — output must be one of N allowed values
+- [x] `JsonValidator` — well-formed JSON beyond schema (syntax, depth limits)
+- [x] `HtmlValidator` — tag allowlists, attribute sanitisation
+- [x] `SqlValidator` — statement type allowlist (SELECT only, no DROP/ALTER)
+- [x] `UrlFormatValidator` — protocol allowlist, domain allowlist, no credentials
+- [x] `RangeValidator` — numeric bounds, string length, date ranges
+- [x] `ChoicesValidator` — output must be one of N allowed values
 
 ### Phase 1.1.1 — Positive topic enforcement
 
-- [ ] `TopicAllowlistScanner` — "you may ONLY discuss X, Y, Z"
-- [ ] Keyword + semantic similarity (via `LlmCallback` for semantic mode)
-- [ ] Complements `BannedTopicScanner` (negative blocklist) with positive allowlist
-- [ ] Configurable strictness: keyword-only (zero deps) or LLM-assisted
+- [x] `TopicAllowlistScanner` — "you may ONLY discuss X, Y, Z"
+- [x] Keyword + semantic similarity (via `LlmCallback` for semantic mode)
+- [x] Complements `BannedTopicScanner` (negative blocklist) with positive allowlist
+- [x] Configurable strictness: keyword-only (zero deps) or LLM-assisted
 
 ### Phase 1.1.2 — Brand safety scanners
 
-- [ ] `CompetitorMentionScanner` — configurable competitor name/product lists
-- [ ] `BiasScanner` — demographic bias indicators in generated text
-- [ ] `PolitenessScanner` — tone/register checks (formal, neutral, casual)
-- [ ] `ReadingLevelScanner` — Flesch-Kincaid / Coleman-Liau grade level enforcement
+- [x] `CompetitorMentionScanner` — configurable competitor name/product lists
+- [x] `BiasScanner` — demographic bias indicators in generated text
+- [x] `PolitenessScanner` — tone/register checks (formal, neutral, casual)
+- [x] `ReadingLevelScanner` — Flesch-Kincaid / Coleman-Liau grade level enforcement
 
 ### Design constraint
 

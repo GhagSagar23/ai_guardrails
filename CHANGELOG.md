@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.0
+
+- **Format validators** — 6 pure-Dart output validators:
+  `JsonValidator` (syntax + depth/array/key limits), `HtmlValidator` (tag/attribute
+  allowlists, event handler & javascript: URI blocking), `SqlValidator` (statement-type
+  allowlist, default SELECT-only), `UrlFormatValidator` (protocol/domain allowlists,
+  credential blocking), `RangeValidator` (numeric bounds + string length),
+  `ChoicesValidator` (output must be one of N values).
+- **`TopicAllowlistScanner`** — positive topic enforcement ("you may ONLY discuss
+  X, Y, Z"). Keyword mode (zero deps) or LLM-assisted semantic mode via
+  `LlmCallback`. Complements `BannedTopicScanner` (negative blocklist).
+- **Brand safety scanners** — `CompetitorMentionScanner` (configurable competitor
+  name/product lists with redact/hash/block/warn), `BiasScanner` (demographic bias
+  heuristics + optional LLM deep analysis), `PolitenessScanner` (tone register
+  detection: formal/neutral/casual), `ReadingLevelScanner` (Flesch-Kincaid +
+  Coleman-Liau grade level enforcement).
+- All 11 scanners registered in `ScannerRegistry` with config-driven construction.
+- 30 built-in scanners total.
+
 ## 1.0.0
 
 - **`OnFailAction`** — configurable per-scanner failure strategies at the
