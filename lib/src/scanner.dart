@@ -69,6 +69,11 @@ class ScanResult {
   /// Human-readable explanation when [passed] is `false` or text was changed.
   final String? reason;
 
+  /// Optional replacement text the scanner suggests when used with
+  /// [OnFailAction.fix]. If present, the orchestrator may replace the
+  /// scanned text with this value instead of blocking.
+  final String? suggestedFix;
+
   /// Placeholder → original value for every span this scanner redacted or
   /// hashed. Empty when nothing was transformed. Used by [AiGuard] to
   /// rehydrate PII in LLM output.
@@ -88,6 +93,7 @@ class ScanResult {
     this.score = 0.0,
     this.findings = const [],
     this.reason,
+    this.suggestedFix,
     this.redactionMap = const {},
     this.transformations = const {},
   });
@@ -98,6 +104,7 @@ class ScanResult {
         score = 0.0,
         findings = const [],
         reason = null,
+        suggestedFix = null,
         redactionMap = const {},
         transformations = const {};
 
@@ -107,6 +114,7 @@ class ScanResult {
     this.text, {
     required this.findings,
     this.reason,
+    this.suggestedFix,
     this.score = 1.0,
   })  : passed = false,
         redactionMap = const {},
@@ -118,6 +126,7 @@ class ScanResult {
     this.text, {
     required this.findings,
     this.reason,
+    this.suggestedFix,
     this.score = 0.5,
   })  : passed = true,
         redactionMap = const {},
@@ -134,6 +143,7 @@ class ScanResult {
     required this.findings,
     this.transformations = const {},
     this.reason,
+    this.suggestedFix,
     this.score = 0.5,
   })  : passed = true,
         redactionMap = const {};

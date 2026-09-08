@@ -242,6 +242,7 @@ throwing scanner instead.
 | **`FactCheckScanner`** | output | `warn` | NLI-style output-vs-context verification via `LlmCallback` — supported/contradicted/unsupported |
 | **`TopicSafetyScanner`** | input · output | `block` | LLM-judged topic adherence — allowed/forbidden topic lists via `LlmCallback` |
 | **`PaddingAttackScanner`** | input | `block` | Context-exhaustion padding: Shannon entropy floor + single-char run ratio |
+| **`ToolOutputScanner`** | input · output | `block` | XSS, SSTI, path traversal, SSRF indicators in tool execution results |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn, transform }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
@@ -766,6 +767,11 @@ red-team test corpus (62 adversarial prompts), `GuardBenchmark`
 **Shipped (0.9.1):** `GuardAction.transform` (permanent content rewrites
 via `ScanResult.transformations`), `PaddingAttackScanner` (Shannon entropy
 + char-run ratio for context-exhaustion attacks).
+
+**Shipped (1.0.0):** `OnFailAction` (per-scanner failure strategies:
+block/warn/filter/fix/reask/refrain/noop), `GuardedLlmCall` (corrective
+retry loop on `reask`), `ToolOutputScanner` (XSS/SSTI/path-traversal/SSRF
+in tool results), `AiGuard.runToolOutputStage()`.
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
 guardrails, format validators, OTel tracing, guard server, and more.

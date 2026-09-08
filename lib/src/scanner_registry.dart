@@ -16,6 +16,7 @@ import 'scanners/secret_scanner.dart';
 import 'scanners/token_limit_scanner.dart';
 import 'scanners/tool_call_scanner.dart';
 import 'scanners/padding_attack_scanner.dart';
+import 'scanners/tool_output_scanner.dart';
 import 'scanners/topic_safety_scanner.dart';
 import 'scanners/url_scanner.dart';
 
@@ -91,6 +92,7 @@ class ScannerRegistry {
     register('schema', _buildSchema);
     register('tool_call', _buildToolCall);
     register('padding_attack', _buildPaddingAttack);
+    register('tool_output', _buildToolOutput);
     register('hallucination', _buildHallucination);
     register('fact_check', _buildFactCheck);
     register('topic_safety', _buildTopicSafety);
@@ -194,6 +196,19 @@ class ScannerRegistry {
         minRunLength: cfg['minRunLength'] as int? ?? 5,
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
       );
+
+  static ScannerBase _buildToolOutput(Map<String, dynamic> cfg) {
+    final cats = (cfg['categories'] as List?)?.map((c) {
+      for (final cat in ToolOutputCategory.values) {
+        if (cat.name == c) return cat;
+      }
+      throw ArgumentError('Unknown ToolOutputCategory: $c');
+    }).toSet();
+    return ToolOutputScanner(
+      action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      categories: cats ?? ToolOutputCategory.values.toSet(),
+    );
+  }
 
   static ScannerBase _buildHallucination(Map<String, dynamic> cfg) {
     final prompt = cfg['prompt'] as String?;
