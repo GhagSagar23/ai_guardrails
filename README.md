@@ -55,8 +55,8 @@ inference cost.
 
 - **Chatbots & conversational AI** — strip PII from user messages before they reach your
   LLM provider, block prompt injection attempts
-- **RAG applications** — validate that model output is grounded in your source documents
-  with `GroundingScanner`
+- **RAG applications** — scan retrieved chunks before prompt assembly with
+  `runRetrievalStage()`, validate output grounding with `GroundingScanner`
 - **Code generation apps** — catch dangerous generated code (`rm -rf`, `DROP TABLE`,
   `eval()`) before it reaches execution with `CodeExecutionScanner`
 - **Streaming completions** — scan token-by-token output in real time with
@@ -743,8 +743,11 @@ limits.
 **Shipped (0.8):** `GuardSession` stateful multi-turn wrapper — finding
 accumulation, configurable escalation policies (warn → block → terminate).
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through 0.9 — provider
-wrappers and the policy platform.
+**Shipped (0.8.2):** `runRetrievalStage()` — scan RAG chunks before prompt
+assembly, per-chunk pass/fail with drop reasons.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
+guardrails, format validators, OTel tracing, guard server, and more.
 
 ## Resources
 
@@ -752,7 +755,7 @@ wrappers and the policy platform.
   dartdoc reference on pub.dev
 - [**BENCHMARK.md**](BENCHMARK.md) — measured throughput and latency for every scanner
 - [**PERFORMANCE-AUDIT.md**](PERFORMANCE-AUDIT.md) — ReDoS safety and memory analysis
-- [**ROADMAP.md**](ROADMAP.md) — phased plan through 0.9 with contribution targets
+- [**ROADMAP.md**](ROADMAP.md) — phased plan through 1.4 with contribution targets
 - [**CONTRIBUTING.md**](CONTRIBUTING.md) — issue-first contribution workflow
 - [**SECURITY.md**](SECURITY.md) — vulnerability reporting and security scope
 

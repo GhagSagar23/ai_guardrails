@@ -103,22 +103,13 @@ not a new scanner contract. No base class changes.
 
 ---
 
-## Phase 0.8.2 — Retrieval / RAG stage
+### 0.8.2 — Retrieval / RAG stage
 
-RAG apps assemble prompts from retrieved documents. Poisoned or irrelevant
-chunks entering the prompt is a real attack surface.
-
-### `AiGuard.runRetrievalStage()`
-
-- [ ] New pipeline stage: scan retrieved chunks before prompt assembly
-- [ ] Reuses existing scanners (PII in docs, injection in chunks, secrets in KB content)
-- [ ] Per-chunk pass/fail with reason — drop poisoned chunks, keep clean ones
-- [ ] Optional relevance threshold via `GroundingScanner`
-
-### Design constraint
-
-No new scanners required — the stage is a pipeline addition, not a scanner
-addition. Chunks are scanned independently; the stage returns a filtered list.
+- `AiGuard.runRetrievalStage(List<String> chunks)` — scan retrieved chunks
+  before prompt assembly, reusing existing input scanners
+- `ChunkResult` — per-chunk pass/fail with drop reason and processed text
+- `RetrievalResult` — `.accepted` (filtered list), `.dropped`, `.allFindings`
+- Chunks scanned independently; one poisoned chunk doesn't block others
 
 ---
 
