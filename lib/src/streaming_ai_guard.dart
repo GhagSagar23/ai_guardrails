@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'ai_guard.dart';
+import 'policy.dart';
 import 'scanner.dart';
 
 /// A single scanned segment from a streaming LLM response.
@@ -46,12 +47,14 @@ class StreamingAiGuard {
     List<ScannerBase> outputScanners = const [],
     bool failClosed = true,
     LlmCallback? llmCallback,
+    List<PolicyRule> rules = const [],
     this.boundary = '\n',
   }) : _guard = AiGuard(
           inputScanners: inputScanners,
           outputScanners: outputScanners,
           failClosed: failClosed,
           llmCallback: llmCallback,
+          rules: rules,
         );
 
   /// Scan input only, same as [AiGuard.scanInput].

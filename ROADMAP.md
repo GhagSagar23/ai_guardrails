@@ -145,42 +145,42 @@ The `LlmCallback` is injected, not owned — the package never imports an LLM SD
 
 ---
 
-## Phase 0.9.0 — Policy platform
+### 0.9.0 — Policy platform
 
 The jump from "scanner collection" to "guardrails platform."
 
 ### Policy DSL
 
-- [ ] Declarative rules: `when: findings.count('pii.*') > 3, then: block`
-- [ ] Compose scanners into policies without writing Dart code
-- [ ] JSON-based (consistent with 0.5 config format)
+- [x] Declarative rules: `when: findings.count('pii.*') > 3, then: block`
+- [x] Compose scanners into policies without writing Dart code
+- [x] JSON-based (consistent with 0.5 config format)
 
 ### Policy profiles
 
-- [ ] Pre-built bundles: `healthcare` (strict PII, HIPAA-aligned), `finance` (PCI patterns),
+- [x] Pre-built bundles: `healthcare` (strict PII, HIPAA-aligned), `finance` (PCI patterns),
       `education` (age-appropriate), `enterprise` (data loss prevention)
-- [ ] Users pick a profile and get sensible scanner + threshold defaults
-- [ ] Profiles are overridable — starting points, not locked configurations
+- [x] Users pick a profile and get sensible scanner + threshold defaults
+- [x] Profiles are overridable — starting points, not locked configurations
 
 ### Scanner registry
 
-- [ ] `AiGuard.register('my_scanner', MyScanner())` with named lookup
-- [ ] Policies reference scanners by name, not by import
-- [ ] Enables dynamic scanner loading from config
+- [x] `ScannerRegistry.instance.register('my_scanner', factory)` with named lookup
+- [x] Policies reference scanners by name, not by import
+- [x] Enables dynamic scanner loading from config
+- [x] Built-in scanners auto-registered with canonical names
 
 ### Red-team test corpus
 
-- [ ] ~50–100 adversarial prompts for validating scanner coverage
-- [ ] Ships as `test/fixtures/redteam/` with per-source `LICENSE` files
-- [ ] Sources: OWASP LLM Top 10 examples (public), academic papers with
-      CC/MIT-licensed prompts, hand-written prompts under Apache-2.0
-- [ ] Never: scraped Reddit/Discord/Twitter content (unclear licensing)
+- [x] 62 adversarial prompts for validating scanner coverage
+- [x] Ships as `test/fixtures/redteam/` with per-source `LICENSE` files
+- [x] Hand-written prompts under Apache-2.0
+- [x] Never: scraped Reddit/Discord/Twitter content (unclear licensing)
 
 ### Benchmarking harness
 
-- [ ] `GuardBenchmark` — users run their own prompt corpus through the scanner chain
-- [ ] Outputs precision/recall report per scanner
-- [ ] Ships with the red-team corpus as sample data
+- [x] `GuardBenchmark` — users run their own prompt corpus through the scanner chain
+- [x] Outputs precision/recall/F1 report per scanner and per category
+- [x] Ships with the red-team corpus as sample data
 
 ---
 

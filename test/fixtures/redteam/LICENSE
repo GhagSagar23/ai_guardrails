@@ -1,0 +1,11 @@
+Red-team test corpus for ai_guardrails.
+
+All prompts in this directory are original, hand-written content licensed
+under the same Apache 2.0 license as the parent project unless noted otherwise.
+
+Category-specific notes:
+- prompt_injection: inspired by OWASP LLM Top 10 (public domain examples)
+- All other categories: original hand-written prompts
+
+No content in this directory is scraped from Reddit, Discord, Twitter/X,
+or any other user-generated content platform.
