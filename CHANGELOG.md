@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.9.0
+
+- **`ScannerRegistry`** — named scanner registration for dynamic lookup and
+  config-driven loading. Global singleton with all 17 built-in scanners
+  auto-registered. Register custom scanners with `register()` (factory) or
+  `registerInstance()` (pre-built). `AiGuard.fromConfig()` now accepts an
+  optional `registry` parameter and supports scanner names as strings alongside
+  inline config objects.
+- **Policy DSL** — declarative post-scan rules evaluated against accumulated
+  findings. Supports `count`, `maxScore`, `totalScore` aggregations with
+  comparison operators (`gt`, `gte`, `lt`, `lte`, `eq`), plus `any`/`none`
+  shortcuts. Glob-pattern matching on finding types (`pii.*`, `*`).
+  Rules are specified in JSON (`{"when": {"count": "pii.*", "gt": 3}, "then": "block"}`)
+  and parsed by `AiGuard.fromConfig()`.
+- **`PolicyProfile`** — pre-built scanner + threshold bundles for four industry
+  verticals: `healthcare` (HIPAA-aligned PII), `finance` (PCI patterns),
+  `education` (URL/code filtering), `enterprise` (DLP defaults). Each profile
+  is an overridable starting point — call `toGuard()` or `toGuardWith(overrides)`.
+- **Red-team test corpus** — 62 hand-written adversarial prompts at
+  `test/fixtures/redteam/corpus.json` covering prompt injection, PII,
+  secrets, code execution, URL attacks, invisible text, repetition, and
+  benign cases. Apache-2.0 licensed, no scraped content.
+- **`GuardBenchmark`** — precision/recall/F1 harness for evaluating scanner
+  chains against a labeled corpus. Per-scanner finding breakdown and
+  per-category accuracy metrics. Ships with the red-team corpus as sample data.
+
 ## 0.8.4
 
 - **`HallucinationScanner`** — SelfCheckGPT-style cross-completion consistency

@@ -29,3 +29,7 @@ export 'src/scanners/fact_check_scanner.dart';
 export 'src/scanners/topic_safety_scanner.dart';
 export 'src/guard_session.dart';
 export 'src/streaming_ai_guard.dart';
+export 'src/scanner_registry.dart';
+export 'src/policy.dart';
+export 'src/policy_profile.dart';
+export 'src/guard_benchmark.dart';

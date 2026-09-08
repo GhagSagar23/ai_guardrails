@@ -756,6 +756,12 @@ semantic scanners. `LlmDependent` mixin for scanner LLM injection.
 `FactCheckScanner` (NLI-style), `TopicSafetyScanner` (allow/deny
 topic lists) — three LLM-assisted scanners powered by `LlmCallback`.
 
+**Shipped (0.9.0):** `ScannerRegistry` (named lookup + dynamic loading),
+Policy DSL (declarative JSON rules with glob-pattern finding matching),
+`PolicyProfile` (healthcare/finance/education/enterprise bundles),
+red-team test corpus (62 adversarial prompts), `GuardBenchmark`
+(precision/recall/F1 harness for scanner chains).
+
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
 guardrails, format validators, OTel tracing, guard server, and more.
 

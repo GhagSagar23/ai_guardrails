@@ -1,20 +1,8 @@
 import 'guard_log.dart';
 import 'guard_metrics.dart';
+import 'policy.dart';
 import 'scanner.dart';
-import 'scanners/banned_pattern_scanner.dart';
-import 'scanners/banned_topic_scanner.dart';
-import 'scanners/code_execution_scanner.dart';
-import 'scanners/grounding_scanner.dart';
-import 'scanners/invisible_text_scanner.dart';
-import 'scanners/language_scanner.dart';
-import 'data/pii_patterns.dart';
-import 'scanners/pii_scanner.dart';
-import 'scanners/prompt_injection_scanner.dart';
-import 'scanners/repetition_scanner.dart';
-import 'scanners/schema_validator.dart';
-import 'scanners/secret_scanner.dart';
-import 'scanners/token_limit_scanner.dart';
-import 'scanners/url_scanner.dart';
+import 'scanner_registry.dart';
 
 /// The result of a full guarded round-trip.
 class GuardOutcome {
@@ -87,6 +75,10 @@ class AiGuard {
   /// Only required when the chain contains [LlmDependent] scanners.
   final LlmCallback? llmCallback;
 
+  /// Post-scan policy rules evaluated after all scanners complete.
+  /// A matching rule can escalate warnings to blocks.
+  final List<PolicyRule> rules;
+
   /// Called after every [run] with a structured audit log entry.
   /// Wire to any logging backend. The log contains text hashes, never raw text.
   final void Function(GuardLog log)? onScan;
@@ -99,6 +91,7 @@ class AiGuard {
     this.outputScanners = const [],
     this.failClosed = true,
     this.llmCallback,
+    this.rules = const [],
     this.onScan,
     this.onMetrics,
   }) {
@@ -127,16 +120,22 @@ class AiGuard {
   /// ```
   factory AiGuard.fromConfig(
     Map<String, dynamic> config, {
+    ScannerRegistry? registry,
     LlmCallback? llmCallback,
     void Function(GuardLog)? onScan,
     void Function(GuardMetrics)? onMetrics,
   }) {
+    final reg = registry ?? ScannerRegistry.instance;
     final input = (config['inputScanners'] as List?)
-            ?.map((e) => _buildScanner(e as Map<String, dynamic>))
+            ?.map((e) => _buildScanner(e, reg))
             .toList() ??
         [];
     final output = (config['outputScanners'] as List?)
-            ?.map((e) => _buildScanner(e as Map<String, dynamic>))
+            ?.map((e) => _buildScanner(e, reg))
+            .toList() ??
+        [];
+    final rules = (config['rules'] as List?)
+            ?.map((e) => PolicyRule.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
 
@@ -145,6 +144,7 @@ class AiGuard {
       outputScanners: output,
       failClosed: config['failClosed'] as bool? ?? true,
       llmCallback: llmCallback,
+      rules: rules,
       onScan: onScan,
       onMetrics: onMetrics,
     );
@@ -191,6 +191,24 @@ class AiGuard {
       mergedMap.addAll(r.redactionMap);
       current = r.text;
       if (!r.passed) return StageRun(current, results, r, mergedMap);
+    }
+
+    // Evaluate policy rules against accumulated findings.
+    for (final rule in rules) {
+      final action = rule.evaluate(results);
+      if (action == GuardAction.block) {
+        final blocker = ScanResult(
+          scanner: 'policy_rule',
+          passed: false,
+          text: current,
+          score: 1.0,
+          reason: 'policy rule triggered: '
+              '${rule.condition.aggregate}(${rule.condition.pattern}) '
+              '${rule.condition.operator} ${rule.condition.value}',
+        );
+        results.add(blocker);
+        return StageRun(current, results, blocker, mergedMap);
+      }
     }
     return StageRun(current, results, null, mergedMap);
   }
@@ -372,99 +390,16 @@ class AiGuard {
     }
   }
 
-  static Scanner _buildScanner(Map<String, dynamic> cfg) {
-    final type = cfg['type'] as String;
-    final action = _parseAction(cfg['action'] as String?);
-    switch (type) {
-      case 'pii':
-        return PiiScanner(
-          action: action ?? GuardAction.redact,
-          locales: _parseLocales(cfg['locales']),
-          types: (cfg['types'] as List?)?.cast<String>().toSet(),
-        );
-      case 'secret':
-        return SecretScanner(action: action ?? GuardAction.block);
-      case 'prompt_injection':
-        return PromptInjectionScanner(
-          threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.5,
-          action: action ?? GuardAction.block,
-        );
-      case 'invisible_text':
-        return InvisibleTextScanner(action: action ?? GuardAction.redact);
-      case 'banned_topic':
-        return BannedTopicScanner(
-          (cfg['topics'] as List).cast<String>(),
-          action: action ?? GuardAction.block,
-          caseSensitive: cfg['caseSensitive'] as bool? ?? false,
-        );
-      case 'banned_pattern':
-        final patterns =
-            (cfg['patterns'] as List).map((p) => RegExp(p as String)).toList();
-        return BannedPatternScanner(
-          patterns,
-          action: action ?? GuardAction.block,
-          name: cfg['name'] as String? ?? 'banned_pattern',
-        );
-      case 'token_limit':
-        return TokenLimitScanner(
-          maxTokens: cfg['maxTokens'] as int? ?? 4096,
-          action: action ?? GuardAction.block,
-        );
-      case 'repetition':
-        return RepetitionScanner(
-          threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.3,
-          ngramSize: cfg['ngramSize'] as int? ?? 3,
-          action: action ?? GuardAction.block,
-        );
-      case 'url':
-        return UrlScanner(action: action ?? GuardAction.block);
-      case 'language':
-        return LanguageScanner(
-          threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.7,
-          action: action ?? GuardAction.block,
-        );
-      case 'code_exec':
-        return CodeExecutionScanner(action: action ?? GuardAction.block);
-      case 'grounding':
-        return GroundingScanner(
-          context: cfg['context'] as String? ?? '',
-          threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.5,
-          action: action ?? GuardAction.warn,
-        );
-      case 'schema':
-        return SchemaValidator(
-          cfg['schema'] as Map<String, dynamic>,
-          action: action ?? GuardAction.block,
-        );
-      default:
-        throw ArgumentError('Unknown scanner type: $type');
+  /// Build a scanner from either a name string or an inline config map,
+  /// resolving through the [ScannerRegistry].
+  static ScannerBase _buildScanner(dynamic item, ScannerRegistry registry) {
+    if (item is String) return registry.build(item);
+    final cfg = item as Map<String, dynamic>;
+    final type = cfg['type'] as String? ?? cfg['name'] as String?;
+    if (type == null) {
+      throw ArgumentError('Scanner config must have a "type" or "name" key');
     }
-  }
-
-  static GuardAction? _parseAction(String? s) {
-    if (s == null) return null;
-    switch (s) {
-      case 'block':
-        return GuardAction.block;
-      case 'redact':
-        return GuardAction.redact;
-      case 'hash':
-        return GuardAction.hash;
-      case 'warn':
-        return GuardAction.warn;
-      default:
-        throw ArgumentError('Unknown action: $s');
-    }
-  }
-
-  static Set<PiiLocale> _parseLocales(dynamic v) {
-    if (v == null) return PiiLocale.values.toSet();
-    return (v as List).map((s) {
-      for (final locale in PiiLocale.values) {
-        if (locale.name == s) return locale;
-      }
-      throw ArgumentError('Unknown locale: $s');
-    }).toSet();
+    return registry.build(type, cfg);
   }
 }
 
