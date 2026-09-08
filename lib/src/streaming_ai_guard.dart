@@ -45,11 +45,13 @@ class StreamingAiGuard {
     List<ScannerBase> inputScanners = const [],
     List<ScannerBase> outputScanners = const [],
     bool failClosed = true,
+    LlmCallback? llmCallback,
     this.boundary = '\n',
   }) : _guard = AiGuard(
           inputScanners: inputScanners,
           outputScanners: outputScanners,
           failClosed: failClosed,
+          llmCallback: llmCallback,
         );
 
   /// Scan input only, same as [AiGuard.scanInput].

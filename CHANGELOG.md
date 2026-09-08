@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.3
+
+- **`LlmCallback`** — `typedef LlmCallback = Future<String> Function(String prompt)`.
+  Caller-provided LLM interface for semantic scanners. The package never imports
+  an LLM SDK; the callback is the abstraction boundary.
+- **`LlmDependent`** mixin — scanners that need LLM judgment mix this in.
+  `AiGuard` validates at construction that the callback is provided and injects
+  it automatically.
+- **`AiGuard.llmCallback`** — optional named parameter on `AiGuard()`,
+  `AiGuard.fromConfig()`, and `StreamingAiGuard()`. Only required when the
+  scanner chain contains `LlmDependent` scanners.
+
 ## 0.8.2
 
 - **`AiGuard.runRetrievalStage()`** — new pipeline stage for RAG applications.
