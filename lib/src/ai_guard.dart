@@ -31,6 +31,10 @@ class GuardOutcome {
   /// Empty when no redaction occurred.
   final Map<String, String> piiMap;
 
+  /// Original span → replacement for all permanent content transforms
+  /// applied across both pipelines. Empty when no transforms occurred.
+  final Map<String, String> transformations;
+
   /// Per-scanner results for the input pipeline.
   final List<ScanResult> inputResults;
 
@@ -45,6 +49,7 @@ class GuardOutcome {
     this.output,
     this.rawOutput,
     this.piiMap = const {},
+    this.transformations = const {},
     this.inputResults = const [],
     this.outputResults = const [],
   });
@@ -169,6 +174,7 @@ class AiGuard {
       List<ScannerBase> scanners, String text, ScanStage stage) async {
     final results = <ScanResult>[];
     final mergedMap = <String, String>{};
+    final mergedTransforms = <String, String>{};
     var current = text;
     for (final s in scanners) {
       if (!s.stages.contains(stage)) continue;
@@ -189,8 +195,11 @@ class AiGuard {
       }
       results.add(r);
       mergedMap.addAll(r.redactionMap);
+      mergedTransforms.addAll(r.transformations);
       current = r.text;
-      if (!r.passed) return StageRun(current, results, r, mergedMap);
+      if (!r.passed) {
+        return StageRun(current, results, r, mergedMap, mergedTransforms);
+      }
     }
 
     // Evaluate policy rules against accumulated findings.
@@ -207,10 +216,10 @@ class AiGuard {
               '${rule.condition.operator} ${rule.condition.value}',
         );
         results.add(blocker);
-        return StageRun(current, results, blocker, mergedMap);
+        return StageRun(current, results, blocker, mergedMap, mergedTransforms);
       }
     }
-    return StageRun(current, results, null, mergedMap);
+    return StageRun(current, results, null, mergedMap, mergedTransforms);
   }
 
   /// Scan input only, returning per-scanner results.
@@ -276,6 +285,7 @@ class AiGuard {
         blockedStage: ScanStage.input,
         blockReason: inRun.blocker!.reason,
         piiMap: inRun.redactionMap,
+        transformations: inRun.transformations,
         inputResults: inRun.results,
       );
       _emitCallbacks(
@@ -295,6 +305,11 @@ class AiGuard {
     final outRun = await _runStage(outputScanners, raw, ScanStage.output);
     outputStart.stop();
 
+    final allTransforms = {
+      ...inRun.transformations,
+      ...outRun.transformations,
+    };
+
     if (outRun.blocker != null) {
       wallStart.stop();
       final outcome = GuardOutcome(
@@ -303,6 +318,7 @@ class AiGuard {
         blockReason: outRun.blocker!.reason,
         input: inRun.text,
         piiMap: inRun.redactionMap,
+        transformations: allTransforms,
         inputResults: inRun.results,
         outputResults: outRun.results,
       );
@@ -329,6 +345,7 @@ class AiGuard {
       output: rehydrated,
       rawOutput: outRun.text,
       piiMap: inRun.redactionMap,
+      transformations: allTransforms,
       inputResults: inRun.results,
       outputResults: outRun.results,
     );
@@ -408,7 +425,9 @@ class StageRun {
   final List<ScanResult> results;
   final ScanResult? blocker;
   final Map<String, String> redactionMap;
-  StageRun(this.text, this.results, this.blocker, this.redactionMap);
+  final Map<String, String> transformations;
+  StageRun(this.text, this.results, this.blocker, this.redactionMap,
+      [this.transformations = const {}]);
 }
 
 /// Scan outcome for a single retrieved chunk.

@@ -184,21 +184,22 @@ The jump from "scanner collection" to "guardrails platform."
 
 ---
 
-## Phase 0.9.1 — Transform actions & padding attack scanner
+### 0.9.1 — Transform actions & padding attack scanner
 
 Move beyond detect-and-block — allow scanners to actively sanitise content.
 
 ### Transform actions
 
-- [ ] `ScanAction.transform` — scanners can suggest content rewrites (beyond PII redaction)
-- [ ] Strip dangerous URLs from output, sanitise code blocks, rewrite tool-call arguments
-- [ ] Scanner contract unchanged — transforms are returned as `ScanResult` metadata, applied by orchestrator
+- [x] `GuardAction.transform` — scanners return permanent content rewrites via `ScanResult.transformations`
+- [x] `ScanResult.transform()` named constructor + `GuardOutcome.transformations` merged map
+- [x] Scanner contract unchanged — transforms are `ScanResult` metadata, applied by orchestrator
 
 ### `PaddingAttackScanner`
 
-- [ ] Shannon entropy floor (detect low-entropy padding designed to exhaust context)
-- [ ] Single-char run ratio detection
-- [ ] Complements existing `TokenLimitScanner` (size) and `RepetitionScanner` (n-grams)
+- [x] Shannon entropy floor (detect low-entropy padding designed to exhaust context)
+- [x] Single-char run ratio detection
+- [x] Configurable `entropyFloor`, `maxRunRatio`, `minRunLength`
+- [x] Complements existing `TokenLimitScanner` (size) and `RepetitionScanner` (n-grams)
 
 ### Design constraint
 

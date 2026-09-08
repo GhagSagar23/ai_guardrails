@@ -69,6 +69,7 @@ class PiiScanner implements Scanner {
           findings: findings,
           reason: 'blocked: PII detected ($kinds)',
         );
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(
           name,

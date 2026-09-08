@@ -15,6 +15,7 @@ import 'scanners/schema_validator.dart';
 import 'scanners/secret_scanner.dart';
 import 'scanners/token_limit_scanner.dart';
 import 'scanners/tool_call_scanner.dart';
+import 'scanners/padding_attack_scanner.dart';
 import 'scanners/topic_safety_scanner.dart';
 import 'scanners/url_scanner.dart';
 
@@ -89,6 +90,7 @@ class ScannerRegistry {
     register('grounding', _buildGrounding);
     register('schema', _buildSchema);
     register('tool_call', _buildToolCall);
+    register('padding_attack', _buildPaddingAttack);
     register('hallucination', _buildHallucination);
     register('fact_check', _buildFactCheck);
     register('topic_safety', _buildTopicSafety);
@@ -185,6 +187,14 @@ class ScannerRegistry {
         maxDepth: cfg['maxDepth'] as int? ?? 5,
       );
 
+  static ScannerBase _buildPaddingAttack(Map<String, dynamic> cfg) =>
+      PaddingAttackScanner(
+        entropyFloor: (cfg['entropyFloor'] as num?)?.toDouble() ?? 3.0,
+        maxRunRatio: (cfg['maxRunRatio'] as num?)?.toDouble() ?? 0.1,
+        minRunLength: cfg['minRunLength'] as int? ?? 5,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      );
+
   static ScannerBase _buildHallucination(Map<String, dynamic> cfg) {
     final prompt = cfg['prompt'] as String?;
     if (prompt == null || prompt.isEmpty) {
@@ -236,6 +246,7 @@ GuardAction? parseGuardAction(String? s) {
     'redact' => GuardAction.redact,
     'hash' => GuardAction.hash,
     'warn' => GuardAction.warn,
+    'transform' => GuardAction.transform,
     _ => throw ArgumentError('Unknown action: $s'),
   };
 }

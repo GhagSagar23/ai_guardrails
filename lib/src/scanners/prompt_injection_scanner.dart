@@ -136,6 +136,7 @@ class PromptInjectionScanner implements Scanner {
               '${threshold.toStringAsFixed(2)})',
         );
 
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(
           name,

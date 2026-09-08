@@ -64,6 +64,7 @@ class BannedPatternScanner implements Scanner {
           findings: findings,
           reason: 'hashed ${findings.length} banned pattern(s)',
         );
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(
           name,

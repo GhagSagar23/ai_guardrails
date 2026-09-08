@@ -128,6 +128,7 @@ class PolicyRule {
       'warn' => GuardAction.warn,
       'redact' => GuardAction.redact,
       'hash' => GuardAction.hash,
+      'transform' => GuardAction.transform,
       _ => throw ArgumentError('Unknown action in policy rule: $thenStr'),
     };
     return PolicyRule(
