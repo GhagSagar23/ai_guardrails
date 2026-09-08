@@ -125,9 +125,11 @@ caller-provided callback. No model weights, no FFI, no tflite.
 
 ### `LlmCallback`
 
-- [ ] `typedef LlmCallback = Future<String> Function(String prompt)`
-- [ ] User provides their own LLM call — package provides the prompt templates
-- [ ] Injected at `AiGuard` construction, passed to scanners that need it
+- [x] `typedef LlmCallback = Future<String> Function(String prompt)`
+- [x] User provides their own LLM call — package provides the prompt templates
+- [x] Injected at `AiGuard` construction, passed to scanners that need it
+- [x] `LlmDependent` mixin — scanners declare LLM dependency, `AiGuard` validates + injects
+- [x] Threaded through `fromConfig()` and `StreamingAiGuard`
 
 ### Scanners
 

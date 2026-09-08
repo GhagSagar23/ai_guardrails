@@ -4,6 +4,13 @@
 /// scanner builds against. Keep it small and stable.
 library;
 
+/// Signature for a caller-provided LLM call.
+///
+/// The package never imports an LLM SDK — this callback is the abstraction
+/// boundary. Semantic scanners ([LlmDependent]) use it for judgment prompts;
+/// the caller controls routing, model, and credentials.
+typedef LlmCallback = Future<String> Function(String prompt);
+
 /// Where in the LLM round-trip a scanner runs.
 enum ScanStage { input, output }
 
@@ -157,4 +164,23 @@ abstract class AsyncScanner implements ScannerBase {
   /// Scan [text] for the given [stage] and return a result.
   Future<ScanResult> scanAsync(String text,
       {ScanStage stage = ScanStage.input});
+}
+
+/// Mixin for scanners that require an [LlmCallback].
+///
+/// [AiGuard] injects the callback at construction time. Scanners that mix
+/// this in can call [llmCallback] during scanning to get LLM judgments.
+mixin LlmDependent {
+  LlmCallback? _llmCallback;
+
+  LlmCallback get llmCallback {
+    if (_llmCallback == null) {
+      throw StateError(
+        'llmCallback not injected — pass llmCallback to AiGuard constructor',
+      );
+    }
+    return _llmCallback!;
+  }
+
+  set llmCallback(LlmCallback cb) => _llmCallback = cb;
 }

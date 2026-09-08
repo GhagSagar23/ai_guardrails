@@ -746,6 +746,9 @@ accumulation, configurable escalation policies (warn → block → terminate).
 **Shipped (0.8.2):** `runRetrievalStage()` — scan RAG chunks before prompt
 assembly, per-chunk pass/fail with drop reasons.
 
+**Shipped (0.8.3):** `LlmCallback` — caller-provided LLM interface for
+semantic scanners. `LlmDependent` mixin for scanner LLM injection.
+
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
 guardrails, format validators, OTel tracing, guard server, and more.
 

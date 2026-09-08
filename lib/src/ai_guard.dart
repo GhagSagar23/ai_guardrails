@@ -83,6 +83,10 @@ class AiGuard {
   /// When a scanner throws, treat it as a block (`true`) or skip it (`false`).
   final bool failClosed;
 
+  /// Optional LLM callback for semantic scanners ([LlmDependent]).
+  /// Only required when the chain contains [LlmDependent] scanners.
+  final LlmCallback? llmCallback;
+
   /// Called after every [run] with a structured audit log entry.
   /// Wire to any logging backend. The log contains text hashes, never raw text.
   final void Function(GuardLog log)? onScan;
@@ -94,9 +98,13 @@ class AiGuard {
     this.inputScanners = const [],
     this.outputScanners = const [],
     this.failClosed = true,
+    this.llmCallback,
     this.onScan,
     this.onMetrics,
-  });
+  }) {
+    _injectLlmCallback(inputScanners);
+    _injectLlmCallback(outputScanners);
+  }
 
   /// Build an [AiGuard] from a JSON-compatible config map.
   ///
@@ -119,6 +127,7 @@ class AiGuard {
   /// ```
   factory AiGuard.fromConfig(
     Map<String, dynamic> config, {
+    LlmCallback? llmCallback,
     void Function(GuardLog)? onScan,
     void Function(GuardMetrics)? onMetrics,
   }) {
@@ -135,9 +144,23 @@ class AiGuard {
       inputScanners: input,
       outputScanners: output,
       failClosed: config['failClosed'] as bool? ?? true,
+      llmCallback: llmCallback,
       onScan: onScan,
       onMetrics: onMetrics,
     );
+  }
+
+  void _injectLlmCallback(List<ScannerBase> scanners) {
+    for (final s in scanners) {
+      if (s is LlmDependent) {
+        if (llmCallback == null) {
+          throw ArgumentError(
+            '${s.name} requires llmCallback but none was provided',
+          );
+        }
+        (s as LlmDependent).llmCallback = llmCallback!;
+      }
+    }
   }
 
   /// Run [scanners] over [text] for [stage], chaining redactions and stopping
