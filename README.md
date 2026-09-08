@@ -241,8 +241,9 @@ throwing scanner instead.
 | **`HallucinationScanner`** | output | `warn` | Cross-completion consistency (SelfCheckGPT-style) via `LlmCallback` — flags contradicted claims |
 | **`FactCheckScanner`** | output | `warn` | NLI-style output-vs-context verification via `LlmCallback` — supported/contradicted/unsupported |
 | **`TopicSafetyScanner`** | input · output | `block` | LLM-judged topic adherence — allowed/forbidden topic lists via `LlmCallback` |
+| **`PaddingAttackScanner`** | input | `block` | Context-exhaustion padding: Shannon entropy floor + single-char run ratio |
 
-Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
+Every action is one of `GuardAction.{ block, redact, hash, warn, transform }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
 `schema.missing_required` — so you can route or log by type.
 
@@ -761,6 +762,10 @@ Policy DSL (declarative JSON rules with glob-pattern finding matching),
 `PolicyProfile` (healthcare/finance/education/enterprise bundles),
 red-team test corpus (62 adversarial prompts), `GuardBenchmark`
 (precision/recall/F1 harness for scanner chains).
+
+**Shipped (0.9.1):** `GuardAction.transform` (permanent content rewrites
+via `ScanResult.transformations`), `PaddingAttackScanner` (Shannon entropy
++ char-run ratio for context-exhaustion attacks).
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
 guardrails, format validators, OTel tracing, guard server, and more.

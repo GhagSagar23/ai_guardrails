@@ -91,6 +91,7 @@ class BannedTopicScanner implements Scanner {
           findings: findings,
           reason: 'hashed ${findings.length} topic match(es)',
         );
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(name, text, findings: findings);
     }

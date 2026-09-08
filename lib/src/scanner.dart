@@ -20,7 +20,7 @@ enum ScanStage { input, output }
 /// * [redact] — replace matched spans with a placeholder and continue.
 /// * [hash]   — replace matched spans with a stable one-way token.
 /// * [warn]   — record findings but let the text pass through unchanged.
-enum GuardAction { block, redact, hash, warn }
+enum GuardAction { block, redact, hash, warn, transform }
 
 /// A single detected issue inside a scanned string.
 class Finding {
@@ -74,6 +74,13 @@ class ScanResult {
   /// rehydrate PII in LLM output.
   final Map<String, String> redactionMap;
 
+  /// Original span → replacement for permanent content rewrites.
+  ///
+  /// Unlike [redactionMap] (which is reversed in output), transformations
+  /// are permanent — the orchestrator records them for audit but does not
+  /// undo them. Populated by scanners using [GuardAction.transform].
+  final Map<String, String> transformations;
+
   const ScanResult({
     required this.scanner,
     required this.passed,
@@ -82,6 +89,7 @@ class ScanResult {
     this.findings = const [],
     this.reason,
     this.redactionMap = const {},
+    this.transformations = const {},
   });
 
   /// A clean pass with no findings.
@@ -90,7 +98,8 @@ class ScanResult {
         score = 0.0,
         findings = const [],
         reason = null,
-        redactionMap = const {};
+        redactionMap = const {},
+        transformations = const {};
 
   /// A blocking result.
   const ScanResult.block(
@@ -100,13 +109,30 @@ class ScanResult {
     this.reason,
     this.score = 1.0,
   })  : passed = false,
-        redactionMap = const {};
+        redactionMap = const {},
+        transformations = const {};
 
   /// A non-blocking result that records findings.
   const ScanResult.warn(
     this.scanner,
     this.text, {
     required this.findings,
+    this.reason,
+    this.score = 0.5,
+  })  : passed = true,
+        redactionMap = const {},
+        transformations = const {};
+
+  /// A passing result where the scanner rewrote content.
+  ///
+  /// The scanner modifies [text] and records what it changed in
+  /// [transformations] (original → replacement). Unlike redaction,
+  /// transforms are permanent — not reversed in output.
+  const ScanResult.transform(
+    this.scanner,
+    this.text, {
+    required this.findings,
+    this.transformations = const {},
     this.reason,
     this.score = 0.5,
   })  : passed = true,

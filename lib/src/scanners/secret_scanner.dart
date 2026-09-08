@@ -132,6 +132,7 @@ class SecretScanner implements Scanner {
           findings: findings,
           reason: 'hashed ${findings.length} secret(s)',
         );
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(
           name,

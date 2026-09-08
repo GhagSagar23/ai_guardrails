@@ -84,6 +84,7 @@ class InvisibleTextScanner implements Scanner {
           findings: findings,
           reason: 'found ${findings.length} invisible character(s)',
         );
+      case GuardAction.transform:
       case GuardAction.warn:
         return ScanResult.warn(
           name,

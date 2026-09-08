@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.1
+
+- **`GuardAction.transform`** — new action for scanners that rewrite content
+  permanently (strip dangerous URLs, sanitise code blocks). Scanners modify
+  text and record what they changed in `ScanResult.transformations`
+  (original → replacement). Unlike `redactionMap`, transforms are NOT reversed
+  in output — they are permanent sanitisation. `ScanResult.transform()` named
+  constructor parallels `.block()` and `.warn()`. `GuardOutcome.transformations`
+  exposes the merged map across both pipelines.
+- **`PaddingAttackScanner`** — detects context-exhaustion padding via two
+  heuristics: Shannon entropy floor (default 3.0 bits/char) flags low-entropy
+  padding, and single-char run ratio (default 10%) catches repeated-character
+  attacks. Configurable `entropyFloor`, `maxRunRatio`, `minRunLength`.
+  Complements `TokenLimitScanner` (size) and `RepetitionScanner` (n-grams)
+  with character-level information-theoretic analysis. Input stage only.
+
 ## 0.9.0
 
 - **`ScannerRegistry`** — named scanner registration for dynamic lookup and
