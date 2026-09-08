@@ -24,5 +24,8 @@ export 'src/scanners/code_execution_scanner.dart';
 export 'src/scanners/grounding_scanner.dart';
 export 'src/scanners/schema_validator.dart';
 export 'src/scanners/tool_call_scanner.dart';
+export 'src/scanners/hallucination_scanner.dart';
+export 'src/scanners/fact_check_scanner.dart';
+export 'src/scanners/topic_safety_scanner.dart';
 export 'src/guard_session.dart';
 export 'src/streaming_ai_guard.dart';

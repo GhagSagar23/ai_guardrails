@@ -238,6 +238,9 @@ throwing scanner instead.
 | **`GroundingScanner`** | output | `warn` | LLM output not grounded in provided source context (keyword-overlap heuristic) |
 | **`SchemaValidator`** | output | `block` | output that isn't valid JSON matching a minimal JSON-Schema |
 | **`ToolCallScanner`** | output | `block` | LLM-emitted tool/function calls: name allow/deny, arg schema, injection, depth/circular |
+| **`HallucinationScanner`** | output | `warn` | Cross-completion consistency (SelfCheckGPT-style) via `LlmCallback` — flags contradicted claims |
+| **`FactCheckScanner`** | output | `warn` | NLI-style output-vs-context verification via `LlmCallback` — supported/contradicted/unsupported |
+| **`TopicSafetyScanner`** | input · output | `block` | LLM-judged topic adherence — allowed/forbidden topic lists via `LlmCallback` |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
@@ -748,6 +751,10 @@ assembly, per-chunk pass/fail with drop reasons.
 
 **Shipped (0.8.3):** `LlmCallback` — caller-provided LLM interface for
 semantic scanners. `LlmDependent` mixin for scanner LLM injection.
+
+**Shipped (0.8.4):** `HallucinationScanner` (SelfCheckGPT-style),
+`FactCheckScanner` (NLI-style), `TopicSafetyScanner` (allow/deny
+topic lists) — three LLM-assisted scanners powered by `LlmCallback`.
 
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 — active
 guardrails, format validators, OTel tracing, guard server, and more.

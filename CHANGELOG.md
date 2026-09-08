@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.4
+
+- **`HallucinationScanner`** — SelfCheckGPT-style cross-completion consistency
+  check. Generates N alternative completions via `LlmCallback`, then asks the
+  LLM to identify claims in the original that contradict the samples.
+  Configurable `sampleCount` (default 3) and `action` (default `warn`).
+  Finding type: `hallucination.inconsistent_claim`.
+- **`FactCheckScanner`** — NLI-style output-vs-context verification. Prompts
+  the caller's LLM to judge whether output follows from a provided source
+  context. Returns `supported` / `contradicted` / `unsupported` verdicts.
+  Complements `GroundingScanner` (keyword-overlap) with semantic judgment.
+  Finding types: `factcheck.contradiction`, `factcheck.unsupported`.
+- **`TopicSafetyScanner`** — LLM-judged topic adherence. Supports allow-lists,
+  deny-lists, or both. Runs on both input and output stages.
+  Finding types: `topic_safety.off_topic`, `topic_safety.forbidden_topic`.
+
 ## 0.8.3
 
 - **`LlmCallback`** — `typedef LlmCallback = Future<String> Function(String prompt)`.
