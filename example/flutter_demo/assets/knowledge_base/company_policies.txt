@@ -1,0 +1,26 @@
+Refund Policy
+Nimbus offers a full refund within 30 days of the initial subscription purchase if you are not satisfied. Refund requests for annual plans made after the 30-day window are prorated based on unused months. Contact billing@nimbus.io to initiate a refund.
+
+Privacy Policy
+Nimbus collects only the personal data necessary to provide and improve the service: name, email, usage analytics, and payment information. We do not sell or share personal data with third parties for advertising purposes. Our full privacy policy is available at nimbus.io/privacy.
+
+Data Retention
+Active workspace data is retained for the lifetime of the subscription. After account cancellation, all user data is permanently deleted within 90 days. Customers may request immediate deletion by contacting support with a verified admin account.
+
+Service Level Agreement
+Nimbus guarantees 99.9% monthly uptime for Pro plans and 99.99% for Enterprise. If uptime falls below the guaranteed threshold, affected customers receive service credits equal to 10x the downtime as a percentage of their monthly bill. Scheduled maintenance windows are announced at least 72 hours in advance.
+
+Support Hours
+Standard support is available Monday through Friday, 9:00 AM to 6:00 PM UTC, excluding major US holidays. Enterprise customers have access to 24/7 priority support via phone and dedicated Slack channel. All support tickets receive an initial response within the timeframe specified in the customer's plan.
+
+Acceptable Use Policy
+Users may not use Nimbus to store, transmit, or distribute content that violates applicable law, infringes intellectual property rights, or contains malware. Automated access that exceeds documented API rate limits is prohibited. Violations may result in account suspension with 48 hours notice, or immediate suspension in cases involving security threats.
+
+Security Incident Response
+Nimbus maintains a 24/7 security operations team that monitors for breaches and unauthorized access. In the event of a confirmed data breach, affected customers are notified within 72 hours with a summary of the impact and remediation steps. A post-incident report is published within 30 days of resolution.
+
+GDPR Compliance
+Nimbus is fully compliant with the EU General Data Protection Regulation. We offer Data Processing Agreements (DPAs) to all customers upon request. EU customer data is stored in our Frankfurt (eu-central-1) data center, and users can exercise their right to access, rectify, or erase personal data through the account settings or by contacting privacy@nimbus.io.
+
+Subprocessor Transparency
+Nimbus publishes a current list of subprocessors at nimbus.io/subprocessors. Customers are notified at least 30 days before any new subprocessor is engaged. Enterprise customers may object to a new subprocessor, and Nimbus will work to provide an alternative arrangement.

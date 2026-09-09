@@ -1,0 +1,23 @@
+name: flutter_demo
+description: Flutter chatbot & RAG demo showcasing ai_guardrails
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ai_guardrails:
+    path: ../..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/knowledge_base/
