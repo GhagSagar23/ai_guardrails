@@ -10,8 +10,7 @@ Future<List<double>> _mockEmbed(String text) async {
     vec[idx] += 1.0;
   }
   // Normalize
-  final norm =
-      vec.fold(0.0, (s, v) => s + v * v);
+  final norm = vec.fold(0.0, (s, v) => s + v * v);
   if (norm > 0) {
     final len = norm == 0 ? 1.0 : _sqrt(norm);
     for (var i = 0; i < vec.length; i++) {
@@ -39,8 +38,8 @@ void main() {
       );
       scanner.embeddingCallback = _mockEmbed;
 
-      final result =
-          await scanner.scanAsync('The cat sat on the mat', stage: ScanStage.output);
+      final result = await scanner.scanAsync('The cat sat on the mat',
+          stage: ScanStage.output);
       expect(result.passed, isTrue);
     });
 
@@ -114,8 +113,7 @@ void main() {
       );
       scanner.embeddingCallback = _mockEmbed;
 
-      final result = await scanner.scanAsync(
-          'Tokyo is the capital of Japan',
+      final result = await scanner.scanAsync('Tokyo is the capital of Japan',
           stage: ScanStage.output);
       expect(result.findings, isNotEmpty);
     });
@@ -155,8 +153,8 @@ void main() {
   group('cosineSimilarity', () {
     test('identical vectors return 1.0', () {
       final v = [1.0, 2.0, 3.0];
-      expect(
-          EmbeddingGroundingScanner.cosineSimilarity(v, v), closeTo(1.0, 0.001));
+      expect(EmbeddingGroundingScanner.cosineSimilarity(v, v),
+          closeTo(1.0, 0.001));
     });
 
     test('orthogonal vectors return 0.0', () {

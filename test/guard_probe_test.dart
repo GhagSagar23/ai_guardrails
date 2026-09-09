@@ -52,13 +52,13 @@ void main() {
     });
 
     test('probes prompt injection scanner', () async {
-      final guard = AiGuard(
-          inputScanners: [PromptInjectionScanner(threshold: 0.5)]);
+      final guard =
+          AiGuard(inputScanners: [PromptInjectionScanner(threshold: 0.5)]);
       final report = await GuardProbe(guard).run();
 
       expect(report.scanners, isNotEmpty);
-      final inj = report.scanners
-          .firstWhere((r) => r.scanner == 'prompt_injection');
+      final inj =
+          report.scanners.firstWhere((r) => r.scanner == 'prompt_injection');
       expect(inj.totalProbes, greaterThan(0));
     });
 
@@ -80,8 +80,7 @@ void main() {
       ]);
       final report = await GuardProbe(guard).run();
 
-      expect(report.scanners, isEmpty,
-          reason: 'no probe set for banned_topic');
+      expect(report.scanners, isEmpty, reason: 'no probe set for banned_topic');
     });
 
     test('reports elapsed time', () async {
@@ -121,8 +120,8 @@ void main() {
     test('invisible text probes are mostly caught', () async {
       final guard = AiGuard(inputScanners: [InvisibleTextScanner()]);
       final report = await GuardProbe(guard).run();
-      final inv = report.scanners
-          .firstWhere((r) => r.scanner == 'invisible_text');
+      final inv =
+          report.scanners.firstWhere((r) => r.scanner == 'invisible_text');
       expect(inv.catchRate, greaterThan(0.5),
           reason: 'InvisibleTextScanner should catch most probes');
     });

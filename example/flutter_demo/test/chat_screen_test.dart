@@ -12,16 +12,14 @@ Widget _wrap(Widget child) => MaterialApp(
 void main() {
   group('ChatScreen', () {
     testWidgets('renders empty state', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
       expect(find.text('Send a message to start chatting'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
       expect(find.byIcon(Icons.send), findsOneWidget);
     });
 
     testWidgets('sends message and shows response', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.tap(find.byIcon(Icons.send));
@@ -36,8 +34,7 @@ void main() {
     });
 
     testWidgets('blocked injection shows error', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(
           find.byType(TextField),
@@ -50,8 +47,7 @@ void main() {
     });
 
     testWidgets('PII input shows redacted badge', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(
           find.byType(TextField), 'My email is test@example.com');
@@ -63,8 +59,7 @@ void main() {
 
     testWidgets('complex response triggers reading level finding',
         (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(
           find.byType(TextField), 'Tell me the technical architecture');
@@ -76,8 +71,7 @@ void main() {
     });
 
     testWidgets('competitor mention triggers guard log', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(
           find.byType(TextField), 'How do you compare to competitors?');
@@ -88,8 +82,7 @@ void main() {
     });
 
     testWidgets('empty message does not send', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.tap(find.byIcon(Icons.send));
       await tester.pump();
@@ -98,8 +91,7 @@ void main() {
     });
 
     testWidgets('send button disabled while loading', (tester) async {
-      await tester.pumpWidget(
-          _wrap(ChatScreen(provider: MockLlmProvider())));
+      await tester.pumpWidget(_wrap(ChatScreen(provider: MockLlmProvider())));
 
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.tap(find.byIcon(Icons.send));
