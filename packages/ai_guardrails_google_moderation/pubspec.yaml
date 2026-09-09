@@ -1,0 +1,26 @@
+name: ai_guardrails_google_moderation
+description: >-
+  Google Cloud Text Moderation scanner for ai_guardrails — AsyncScanner
+  backed by the Natural Language moderateText API.
+version: 0.1.0
+repository: https://github.com/GhagSagar23/ai_guardrails/tree/master/packages/ai_guardrails_google_moderation
+issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
+topics:
+  - ai
+  - security
+  - guardrails
+  - google
+  - moderation
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  ai_guardrails: ">=1.0.0 <2.0.0"
+  http: ^1.2.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

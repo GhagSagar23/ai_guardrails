@@ -318,25 +318,25 @@ Production-grade observability and end-user-facing message support.
 
 ### Phase 1.3.0 — OpenTelemetry tracing
 
-- [ ] `GuardTracer` — per-request spans with scanner-level child spans
-- [ ] Trace ID propagation through pipeline stages
-- [ ] Latency distributions, error rates, token usage attributes
-- [ ] OTel semantic conventions for LLM guardrail operations
-- [ ] Pluggable exporter interface (caller provides the OTel SDK)
+- [x] `GuardTracer` — per-request spans with scanner-level child spans
+- [x] Trace ID propagation through pipeline stages
+- [x] Latency distributions, error rates, token usage attributes
+- [x] OTel semantic conventions for LLM guardrail operations
+- [x] Pluggable exporter interface (caller provides the OTel SDK)
 
 ### Phase 1.3.1 — Multilingual refusal/feedback messages
 
-- [ ] `GuardMessages` — localised user-facing messages per finding type
-- [ ] Ships with 10+ locales (EN, ES, PT, FR, DE, IT, JA, KO, ZH, AR, HI)
-- [ ] Configurable per-scanner message templates
-- [ ] `ScanResult.userMessage(locale)` convenience accessor
+- [x] `GuardMessages` — localised user-facing messages per finding type
+- [x] Ships with 10+ locales (EN, ES, PT, FR, DE, IT, JA, KO, ZH, AR, HI)
+- [x] Configurable per-scanner message templates
+- [x] `ScanResult.userMessage(locale)` convenience accessor
 
 ### Phase 1.3.2 — Scanner hub / plugin distribution
 
-- [ ] Scanner distribution story via pub.dev companion packages
-- [ ] `ai_guardrails_scanners_brand`, `ai_guardrails_scanners_medical`, etc.
-- [ ] Registry auto-discovers installed scanner packages
-- [ ] Extends scanner registry (0.9.0) with package-level plugin loading
+- [x] Scanner distribution story via pub.dev companion packages
+- [x] `ai_guardrails_scanners_brand`, `ai_guardrails_scanners_medical`, etc.
+- [x] Registry auto-discovers installed scanner packages
+- [x] Extends scanner registry (0.9.0) with package-level plugin loading
 
 ### Design constraint
 
@@ -353,17 +353,17 @@ packages or major scope changes — evaluated based on community demand.
 
 ### Phase 1.4.0 — Guard server (shelf middleware)
 
-- [ ] `ai_guardrails_server` — `shelf` middleware wrapping `AiGuard`
-- [ ] OpenAI-compatible `/v1/chat/completions` endpoint with guard injection
-- [ ] Docker-ready, configurable via JSON policy files (0.9.0 format)
-- [ ] Standalone deployment for teams that want guardrails as infrastructure
+- [x] `ai_guardrails_server` — `shelf` middleware wrapping `AiGuard`
+- [x] OpenAI-compatible `/v1/chat/completions` endpoint with guard injection
+- [x] Docker-ready, configurable via JSON policy files (0.9.0 format)
+- [x] Standalone deployment for teams that want guardrails as infrastructure
 
 ### Phase 1.4.1 — Remote validation / hosted ML connectors
 
-- [ ] Connector interface for third-party moderation APIs
-- [ ] `ai_guardrails_google` — Google Cloud Text Moderation
-- [ ] `ai_guardrails_perspective` — Perspective API (toxicity scoring)
-- [ ] Companion packages, never in core — keeps zero-dependency guarantee
+- [x] Connector interface for third-party moderation APIs
+- [x] `ai_guardrails_google_moderation` — Google Cloud Text Moderation
+- [x] `ai_guardrails_perspective` — Perspective API (toxicity scoring)
+- [x] Companion packages, never in core — keeps zero-dependency guarantee
 
 ### Phase 1.4.2 — Conversational flow management
 

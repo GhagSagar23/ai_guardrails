@@ -1,0 +1,11 @@
+{
+  "failClosed": true,
+  "inputScanners": [
+    {"type": "pii", "action": "redact"},
+    {"type": "secret"},
+    {"type": "prompt_injection", "threshold": 0.5}
+  ],
+  "outputScanners": [
+    {"type": "repetition", "threshold": 0.3}
+  ]
+}

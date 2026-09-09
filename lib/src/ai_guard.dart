@@ -1,5 +1,6 @@
 import 'guard_log.dart';
 import 'guard_metrics.dart';
+import 'guard_tracer.dart';
 import 'on_fail_action.dart';
 import 'policy.dart';
 import 'scanner.dart';
@@ -111,6 +112,11 @@ class AiGuard {
   /// Called after every [run] with latency and finding-count metrics.
   final void Function(GuardMetrics metrics)? onMetrics;
 
+  /// Optional tracer for OpenTelemetry-compatible instrumentation.
+  /// When set, the pipeline emits per-request and per-scanner spans.
+  /// Zero cost when `null`.
+  final GuardTracer? tracer;
+
   AiGuard({
     this.inputScanners = const [],
     this.outputScanners = const [],
@@ -121,6 +127,7 @@ class AiGuard {
     this.onFailActions = const {},
     this.onScan,
     this.onMetrics,
+    this.tracer,
   }) {
     _injectLlmCallback(inputScanners);
     _injectLlmCallback(outputScanners);
@@ -154,6 +161,7 @@ class AiGuard {
     EmbeddingCallback? embeddingCallback,
     void Function(GuardLog)? onScan,
     void Function(GuardMetrics)? onMetrics,
+    GuardTracer? tracer,
   }) {
     final reg = registry ?? ScannerRegistry.instance;
     final input = (config['inputScanners'] as List?)
@@ -182,6 +190,7 @@ class AiGuard {
       onFailActions: onFail,
       onScan: onScan,
       onMetrics: onMetrics,
+      tracer: tracer,
     );
   }
 
@@ -214,7 +223,11 @@ class AiGuard {
   /// Run [scanners] over [text] for [stage], chaining redactions and
   /// applying [onFailActions] overrides.
   Future<StageRun> _runStage(
-      List<ScannerBase> scanners, String text, ScanStage stage) async {
+      List<ScannerBase> scanners, String text, ScanStage stage,
+      {GuardSpan? parentSpan}) async {
+    final stageSpan = parentSpan != null
+        ? parentSpan.startChild('guard.${stage.name}')
+        : tracer?.startSpan('guard.${stage.name}');
     final results = <ScanResult>[];
     final mergedMap = <String, String>{};
     final mergedTransforms = <String, String>{};
@@ -225,13 +238,21 @@ class AiGuard {
       final configured = onFailActions[s.name];
       if (configured == OnFailAction.noop) continue;
 
+      final scanSpan = stageSpan?.startChild('scan', attributes: {
+        GuardSemantics.scannerName: s.name,
+      });
+
       ScanResult r;
       try {
         r = s is AsyncScanner
             ? await s.scanAsync(current, stage: stage)
             : (s as Scanner).scan(current, stage: stage);
-      } catch (e) {
-        if (!failClosed) continue;
+      } catch (e, st) {
+        scanSpan?.recordError(e, stackTrace: st);
+        if (!failClosed) {
+          scanSpan?.end();
+          continue;
+        }
         r = ScanResult(
           scanner: s.name,
           passed: false,
@@ -240,6 +261,15 @@ class AiGuard {
           reason: 'scanner error: $e',
         );
       }
+
+      scanSpan?.setAttribute(
+          GuardSemantics.scanResult, r.passed ? 'pass' : 'block');
+      scanSpan?.setAttribute(GuardSemantics.findingCount, r.findings.length);
+      if (r.findings.isNotEmpty) {
+        scanSpan?.setAttribute(GuardSemantics.findingTypes,
+            r.findings.map((f) => f.type).toSet().join(','));
+      }
+      scanSpan?.end();
 
       results.add(r);
       mergedMap.addAll(r.redactionMap);
@@ -254,9 +284,13 @@ class AiGuard {
 
       switch (action) {
         case OnFailAction.block || OnFailAction.reask:
+          stageSpan?.setAttribute(GuardSemantics.blocked, true);
+          stageSpan?.end();
           return StageRun(
               current, results, r, mergedMap, mergedTransforms, action);
         case OnFailAction.refrain:
+          stageSpan?.setAttribute(GuardSemantics.blocked, true);
+          stageSpan?.end();
           return StageRun('', results, r, mergedMap, mergedTransforms, action);
         case OnFailAction.warn:
           break;
@@ -283,10 +317,14 @@ class AiGuard {
               '${rule.condition.operator} ${rule.condition.value}',
         );
         results.add(blocker);
+        stageSpan?.setAttribute(GuardSemantics.blocked, true);
+        stageSpan?.end();
         return StageRun(current, results, blocker, mergedMap, mergedTransforms,
             OnFailAction.block);
       }
     }
+    stageSpan?.setAttribute(GuardSemantics.blocked, false);
+    stageSpan?.end();
     return StageRun(current, results, null, mergedMap, mergedTransforms);
   }
 
@@ -363,13 +401,21 @@ class AiGuard {
     required String input,
     required Future<String> Function(String sanitizedInput) llmCall,
   }) async {
+    final rootSpan = tracer?.startSpan('guard.run');
     final wallStart = Stopwatch()..start();
     final inputStart = Stopwatch()..start();
-    final inRun = await _runStage(inputScanners, input, ScanStage.input);
+    final inRun = await _runStage(inputScanners, input, ScanStage.input,
+        parentSpan: rootSpan);
     inputStart.stop();
 
     if (inRun.blocker != null) {
       wallStart.stop();
+      rootSpan?.setAttribute(GuardSemantics.blocked, true);
+      rootSpan?.setAttribute(
+          GuardSemantics.blockReason, inRun.blocker!.reason ?? '');
+      rootSpan?.setAttribute(
+          GuardSemantics.durationMs, wallStart.elapsedMilliseconds);
+      rootSpan?.end();
       final isRefrain = inRun.failAction == OnFailAction.refrain;
       final outcome = GuardOutcome(
         blocked: !isRefrain,
@@ -395,7 +441,8 @@ class AiGuard {
     final raw = await llmCall(inRun.text);
 
     final outputStart = Stopwatch()..start();
-    final outRun = await _runStage(outputScanners, raw, ScanStage.output);
+    final outRun = await _runStage(outputScanners, raw, ScanStage.output,
+        parentSpan: rootSpan);
     outputStart.stop();
 
     final allTransforms = {
@@ -405,6 +452,12 @@ class AiGuard {
 
     if (outRun.blocker != null) {
       wallStart.stop();
+      rootSpan?.setAttribute(GuardSemantics.blocked, true);
+      rootSpan?.setAttribute(
+          GuardSemantics.blockReason, outRun.blocker!.reason ?? '');
+      rootSpan?.setAttribute(
+          GuardSemantics.durationMs, wallStart.elapsedMilliseconds);
+      rootSpan?.end();
       final isRefrain = outRun.failAction == OnFailAction.refrain;
       final outcome = GuardOutcome(
         blocked: !isRefrain,
@@ -435,6 +488,10 @@ class AiGuard {
     }
 
     wallStart.stop();
+    rootSpan?.setAttribute(GuardSemantics.blocked, false);
+    rootSpan?.setAttribute(
+        GuardSemantics.durationMs, wallStart.elapsedMilliseconds);
+    rootSpan?.end();
     final outcome = GuardOutcome(
       blocked: false,
       input: inRun.text,
