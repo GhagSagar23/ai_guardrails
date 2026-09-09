@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.2.0
+
+- **`EmbeddingGroundingScanner`** — semantic grounding via caller-provided
+  `EmbeddingCallback`. Computes cosine similarity between output and source
+  chunks; flags text below a configurable similarity threshold. Optional
+  NLI-style entailment rescue via `LlmCallback` for edge cases where
+  paraphrased text fails embedding similarity. Upgrades the keyword-overlap
+  `GroundingScanner` (0.4) with vector-level depth. Finding type:
+  `grounding.low_similarity`. Output-stage only.
+- **`EmbeddingCallback`** — `typedef EmbeddingCallback = Future<List<double>>
+  Function(String text)`. Caller-provided embedding interface. The package
+  never imports an embedding SDK.
+- **`EmbeddingDependent`** mixin — scanners declare embedding dependency;
+  `AiGuard` validates and injects at construction. Follows the same pattern
+  as `LlmDependent`.
+- **`AiGuard.embeddingCallback`** — optional named parameter on `AiGuard()`,
+  `AiGuard.fromConfig()`. Only required when the scanner chain contains
+  `EmbeddingDependent` scanners.
+- **`GuardCache`** — configurable cache for `LlmCallback` and
+  `EmbeddingCallback` results. Content-hash keyed, TTL-based expiry.
+  `wrapLlm()` and `wrapEmbedding()` return cached callback wrappers.
+  Tracks hit/miss stats via `hits`, `misses`, `hitRate`. In-memory default
+  via `InMemoryCache` (LRU eviction); pluggable via `CacheBackend` interface.
+- **`GuardProbe`** — proactive red-teaming tool that attacks the scanner
+  chain with adversarial inputs per scanner type. Reports `ProbeResult`
+  per scanner (bypass rate, caught count, bypassed inputs) and an overall
+  `ProbeReport.resilienceScore`. Probe sets cover PII evasion, injection
+  role-play, secret obfuscation, invisible text, URL exploits, code
+  execution indirection, padding attacks, and SQL injection.
+- 31 built-in scanners total.
+
 ## 1.1.0
 
 - **Format validators** — 6 pure-Dart output validators:

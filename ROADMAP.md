@@ -285,24 +285,24 @@ Upgrades to grounding/fact-checking and adversarial testing tooling.
 
 ### Phase 1.2.0 — Embedding/NLI-based provenance
 
-- [ ] `EmbeddingGroundingScanner` — cosine similarity between output and source chunks
-- [ ] Accepts caller-provided embedding callback (like `LlmCallback` pattern)
-- [ ] NLI-style entailment check: "does the output follow from the context?"
-- [ ] Upgrades keyword-overlap `GroundingScanner` (0.4) with semantic depth
+- [x] `EmbeddingGroundingScanner` — cosine similarity between output and source chunks
+- [x] Accepts caller-provided embedding callback (like `LlmCallback` pattern)
+- [x] NLI-style entailment check: "does the output follow from the context?"
+- [x] Upgrades keyword-overlap `GroundingScanner` (0.4) with semantic depth
 
 ### Phase 1.2.1 — LLM pipeline caching
 
-- [ ] `GuardCache` — configurable cache for `LlmCallback` and `AsyncScanner` results
-- [ ] Content-hash keyed, TTL-based expiry
-- [ ] Critical once LLM-assisted scanners (0.8.3) land — repeated similar scans are expensive
-- [ ] In-memory default, pluggable backend interface
+- [x] `GuardCache` — configurable cache for `LlmCallback` and `AsyncScanner` results
+- [x] Content-hash keyed, TTL-based expiry
+- [x] Critical once LLM-assisted scanners (0.8.3) land — repeated similar scans are expensive
+- [x] In-memory default, pluggable backend interface
 
 ### Phase 1.2.2 — LLM vulnerability scanning
 
-- [ ] `GuardProbe` — proactive red-teaming tool that attacks the scanner chain
-- [ ] Generates adversarial prompts targeting each scanner's known weaknesses
-- [ ] Reports bypass rate per scanner and overall pipeline resilience score
-- [ ] Extends benchmark harness (0.9.0) from "measure" into "attack"
+- [x] `GuardProbe` — proactive red-teaming tool that attacks the scanner chain
+- [x] Generates adversarial prompts targeting each scanner's known weaknesses
+- [x] Reports bypass rate per scanner and overall pipeline resilience score
+- [x] Extends benchmark harness (0.9.0) from "measure" into "attack"
 
 ### Design constraint
 

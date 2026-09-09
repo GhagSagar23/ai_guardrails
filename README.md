@@ -254,6 +254,7 @@ throwing scanner instead.
 | **`BiasScanner`** | output | `warn` | Demographic bias: gender/age/racial generalisations, stereotypes |
 | **`PolitenessScanner`** | output | `warn` | Tone register mismatch (formal/neutral/casual target) |
 | **`ReadingLevelScanner`** | output | `warn` | Reading grade level outside bounds (Flesch-Kincaid + Coleman-Liau) |
+| **`EmbeddingGroundingScanner`** | output | `warn` | Embedding cosine similarity grounding with optional NLI entailment |
 
 Every action is one of `GuardAction.{ block, redact, hash, warn, transform }`. Findings are dotted
 and predictable — `pii.email`, `secret.aws_access_key`, `injection.override`,
@@ -790,8 +791,15 @@ in tool results), `AiGuard.runToolOutputStage()`.
 (`CompetitorMentionScanner`, `BiasScanner`, `PolitenessScanner`,
 `ReadingLevelScanner`). 30 built-in scanners total.
 
+**Shipped (1.2.0):** `EmbeddingGroundingScanner` (cosine similarity + optional
+NLI entailment), `EmbeddingCallback` / `EmbeddingDependent` (embedding
+injection pattern matching `LlmCallback`), `GuardCache` (TTL-based callback
+caching with pluggable `CacheBackend`, in-memory LRU default), `GuardProbe`
+(red-team probe tool with adversarial inputs per scanner, bypass rates,
+resilience scoring). 31 built-in scanners total.
+
 See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 —
-provenance, caching, OTel tracing, guard server, and more.
+OTel tracing, multilingual messages, guard server, and more.
 
 ## Resources
 

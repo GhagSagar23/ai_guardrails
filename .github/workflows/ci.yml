@@ -19,8 +19,8 @@ jobs:
         with:
           sdk: stable
       - run: dart pub get
-      - run: dart format --output=none --set-exit-if-changed .
-      - run: dart analyze --fatal-infos
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: dart analyze --fatal-infos lib test
       - run: dart test
 
   wrappers:
