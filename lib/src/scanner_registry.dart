@@ -30,6 +30,7 @@ import 'scanners/competitor_mention_scanner.dart';
 import 'scanners/bias_scanner.dart';
 import 'scanners/politeness_scanner.dart';
 import 'scanners/reading_level_scanner.dart';
+import 'scanners/embedding_grounding_scanner.dart';
 
 /// Creates a [ScannerBase] from a JSON config map.
 typedef ScannerFactory = ScannerBase Function(Map<String, dynamic> config);
@@ -118,6 +119,7 @@ class ScannerRegistry {
     register('bias', _buildBias);
     register('politeness', _buildPoliteness);
     register('reading_level', _buildReadingLevel);
+    register('embedding_grounding', _buildEmbeddingGrounding);
   }
 
   // -- Built-in factories --
@@ -350,6 +352,14 @@ class ScannerRegistry {
       ReadingLevelScanner(
         minGrade: (cfg['minGrade'] as num?)?.toDouble(),
         maxGrade: (cfg['maxGrade'] as num?)?.toDouble(),
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
+      );
+
+  static ScannerBase _buildEmbeddingGrounding(Map<String, dynamic> cfg) =>
+      EmbeddingGroundingScanner(
+        sourceChunks:
+            (cfg['sourceChunks'] as List?)?.cast<String>() ?? const [],
+        threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.7,
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
       );
 

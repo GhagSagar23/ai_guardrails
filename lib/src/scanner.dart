@@ -11,6 +11,13 @@ library;
 /// the caller controls routing, model, and credentials.
 typedef LlmCallback = Future<String> Function(String prompt);
 
+/// Signature for a caller-provided embedding function.
+///
+/// Returns a vector (list of doubles) for semantic similarity computation.
+/// The package never imports an embedding SDK — this callback is the
+/// abstraction boundary.
+typedef EmbeddingCallback = Future<List<double>> Function(String text);
+
 /// Where in the LLM round-trip a scanner runs.
 enum ScanStage { input, output }
 
@@ -219,4 +226,23 @@ mixin LlmDependent {
   }
 
   set llmCallback(LlmCallback cb) => _llmCallback = cb;
+}
+
+/// Mixin for scanners that require an [EmbeddingCallback].
+///
+/// [AiGuard] injects the callback at construction time. Scanners that mix
+/// this in can call [embeddingCallback] during scanning for vector similarity.
+mixin EmbeddingDependent {
+  EmbeddingCallback? _embeddingCallback;
+
+  EmbeddingCallback get embeddingCallback {
+    if (_embeddingCallback == null) {
+      throw StateError(
+        'embeddingCallback not injected — pass embeddingCallback to AiGuard constructor',
+      );
+    }
+    return _embeddingCallback!;
+  }
+
+  set embeddingCallback(EmbeddingCallback cb) => _embeddingCallback = cb;
 }

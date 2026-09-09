@@ -88,6 +88,11 @@ class AiGuard {
   /// Only required when the chain contains [LlmDependent] scanners.
   final LlmCallback? llmCallback;
 
+  /// Optional embedding callback for vector-similarity scanners
+  /// ([EmbeddingDependent]). Only required when the chain contains
+  /// [EmbeddingDependent] scanners.
+  final EmbeddingCallback? embeddingCallback;
+
   /// Post-scan policy rules evaluated after all scanners complete.
   /// A matching rule can escalate warnings to blocks.
   final List<PolicyRule> rules;
@@ -111,6 +116,7 @@ class AiGuard {
     this.outputScanners = const [],
     this.failClosed = true,
     this.llmCallback,
+    this.embeddingCallback,
     this.rules = const [],
     this.onFailActions = const {},
     this.onScan,
@@ -118,6 +124,8 @@ class AiGuard {
   }) {
     _injectLlmCallback(inputScanners);
     _injectLlmCallback(outputScanners);
+    _injectEmbeddingCallback(inputScanners);
+    _injectEmbeddingCallback(outputScanners);
   }
 
   /// Build an [AiGuard] from a JSON-compatible config map.
@@ -143,6 +151,7 @@ class AiGuard {
     Map<String, dynamic> config, {
     ScannerRegistry? registry,
     LlmCallback? llmCallback,
+    EmbeddingCallback? embeddingCallback,
     void Function(GuardLog)? onScan,
     void Function(GuardMetrics)? onMetrics,
   }) {
@@ -168,6 +177,7 @@ class AiGuard {
       outputScanners: output,
       failClosed: config['failClosed'] as bool? ?? true,
       llmCallback: llmCallback,
+      embeddingCallback: embeddingCallback,
       rules: rules,
       onFailActions: onFail,
       onScan: onScan,
@@ -184,6 +194,19 @@ class AiGuard {
           );
         }
         (s as LlmDependent).llmCallback = llmCallback!;
+      }
+    }
+  }
+
+  void _injectEmbeddingCallback(List<ScannerBase> scanners) {
+    for (final s in scanners) {
+      if (s is EmbeddingDependent) {
+        if (embeddingCallback == null) {
+          throw ArgumentError(
+            '${s.name} requires embeddingCallback but none was provided',
+          );
+        }
+        (s as EmbeddingDependent).embeddingCallback = embeddingCallback!;
       }
     }
   }
