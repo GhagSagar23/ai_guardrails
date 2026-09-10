@@ -51,3 +51,6 @@ export 'src/scanners/reading_level_scanner.dart';
 export 'src/scanners/embedding_grounding_scanner.dart';
 export 'src/guard_cache.dart';
 export 'src/guard_probe.dart';
+export 'src/guard_tracer.dart';
+export 'src/guard_messages.dart';
+export 'src/scanner_hub.dart';

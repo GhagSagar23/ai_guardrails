@@ -33,6 +33,9 @@ jobs:
           - ai_guardrails_google
           - ai_guardrails_anthropic
           - ai_guardrails_langchain
+          - ai_guardrails_server
+          - ai_guardrails_google_moderation
+          - ai_guardrails_perspective
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1

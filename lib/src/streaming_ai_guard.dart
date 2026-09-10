@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'ai_guard.dart';
+import 'guard_tracer.dart';
 import 'on_fail_action.dart';
 import 'policy.dart';
 import 'scanner.dart';
@@ -50,6 +51,7 @@ class StreamingAiGuard {
     LlmCallback? llmCallback,
     List<PolicyRule> rules = const [],
     Map<String, OnFailAction> onFailActions = const {},
+    GuardTracer? tracer,
     this.boundary = '\n',
   }) : _guard = AiGuard(
           inputScanners: inputScanners,
@@ -58,6 +60,7 @@ class StreamingAiGuard {
           llmCallback: llmCallback,
           rules: rules,
           onFailActions: onFailActions,
+          tracer: tracer,
         );
 
   /// Scan input only, same as [AiGuard.scanInput].

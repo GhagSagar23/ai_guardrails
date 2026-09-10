@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0
+
+- **`GuardTracer`** — abstract OTel-compatible tracing interface. `AiGuard`
+  accepts an optional `GuardTracer` and emits per-request root spans, per-stage
+  child spans, and per-scanner leaf spans with result/finding attributes. Zero
+  cost when no tracer is configured. `StreamingAiGuard` forwards the tracer to
+  its inner guard. `GuardSemantics` defines semantic convention attribute keys
+  (`guardrail.scanner.name`, `guardrail.scan.result`, `guardrail.blocked`, etc.).
+- **`GuardMessages`** — localised user-facing messages for 32 scanner types
+  across 11 locales (EN, ES, PT, FR, DE, IT, JA, KO, ZH, AR, HI). Configurable
+  via `customMessages` for per-scanner overrides. Resolution: custom → built-in
+  locale → English fallback → generic. `ScanResultMessages` extension adds
+  `ScanResult.userMessage({locale, messages})` for tree-shakeable convenience.
+- **`ScannerPlugin`** / **`ScannerHub`** — plugin distribution convention for
+  companion scanner packages. `ScannerPlugin` is the interface; `ScannerHub`
+  installs plugins into a `ScannerRegistry`. Enables `ai_guardrails_scanners_*`
+  companion packages without auto-discovery magic.
+
 ## 1.2.0
 
 - **`EmbeddingGroundingScanner`** — semantic grounding via caller-provided

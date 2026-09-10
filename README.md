@@ -798,8 +798,25 @@ caching with pluggable `CacheBackend`, in-memory LRU default), `GuardProbe`
 (red-team probe tool with adversarial inputs per scanner, bypass rates,
 resilience scoring). 31 built-in scanners total.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full plan through Phase 1.4 —
-OTel tracing, multilingual messages, guard server, and more.
+**Shipped (1.3.0):** `GuardTracer` (abstract OTel-compatible tracing —
+per-request root spans, per-stage child spans, per-scanner leaf spans with
+`GuardSemantics` attribute keys; zero cost when unconfigured), `GuardMessages`
+(localised user-facing messages for 32 scanner types across 11 locales with
+`ScanResult.userMessage(locale:)` extension), `ScannerPlugin` / `ScannerHub`
+(plugin distribution convention for companion scanner packages).
+
+**Shipped (1.4.0):** `ai_guardrails_server` companion package — shelf
+middleware (`guardMiddleware`) and standalone REST handler (`GuardHandler`)
+with `POST /v1/scan/input`, `POST /v1/scan/output`, OpenAI-compatible
+`POST /v1/chat/completions` proxy, `PolicyLoader` for JSON config, Dockerfile.
+
+**Shipped (1.4.1):** `ai_guardrails_google_moderation` (`TextModerationScanner`
+— Google Cloud Natural Language moderateText API) and `ai_guardrails_perspective`
+(`PerspectiveScanner` — Jigsaw Perspective API toxicity scoring). Both implement
+`AsyncScanner` with injectable `http.Client` for testing.
+
+See **[ROADMAP.md](ROADMAP.md)** for the full roadmap — Phase 1.4.2
+(conversational flow management) is under evaluation.
 
 ## Resources
 
