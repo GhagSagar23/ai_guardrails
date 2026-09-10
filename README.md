@@ -815,8 +815,13 @@ with `POST /v1/scan/input`, `POST /v1/scan/output`, OpenAI-compatible
 (`PerspectiveScanner` — Jigsaw Perspective API toxicity scoring). Both implement
 `AsyncScanner` with injectable `http.Client` for testing.
 
-See **[ROADMAP.md](ROADMAP.md)** for the full roadmap — Phase 1.4.2
-(conversational flow management) is under evaluation.
+**Shipped (1.4.2):** `ConversationFlow` (declarative state machine for
+multi-turn conversations — states with topic rails, intent-based transitions,
+JSON config), `CanonicalForm` (keyword + optional LLM intent classification),
+`FlowGuardSession` (conversation-level flow enforcement wrapping `GuardSession`
+— blocks off-topic input, validates transitions, terminal states, serializable).
+
+See **[ROADMAP.md](ROADMAP.md)** for the full roadmap.
 
 ## Resources
 

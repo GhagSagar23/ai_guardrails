@@ -367,10 +367,9 @@ packages or major scope changes — evaluated based on community demand.
 
 ### Phase 1.4.2 — Conversational flow management
 
-- [ ] Declarative flow definitions for multi-turn conversations
-- [ ] Canonical form mapping (user intent → allowed response paths)
-- [ ] Topic rail enforcement at the conversation level (not just per-turn)
-- [ ] Significant scope expansion — evaluate community demand before committing
+- [x] Declarative flow definitions for multi-turn conversations
+- [x] Canonical form mapping (user intent → allowed response paths)
+- [x] Topic rail enforcement at the conversation level (not just per-turn)
 
 ### Design constraint
 

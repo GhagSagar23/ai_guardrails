@@ -2,7 +2,7 @@ name: ai_guardrails
 description: >-
   On-device, provider-agnostic input/output safety for Dart & Flutter AI apps:
   PII redaction, prompt-injection and secret detection, output validation.
-version: 1.3.0
+version: 1.4.0
 repository: https://github.com/GhagSagar23/ai_guardrails
 issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
 topics:
