@@ -3,7 +3,12 @@ import 'package:ai_guardrails/ai_guardrails.dart';
 
 class GuardFindingsCard extends StatelessWidget {
   final List<ScanResult> results;
-  const GuardFindingsCard({super.key, required this.results});
+  final String locale;
+  const GuardFindingsCard({
+    super.key,
+    required this.results,
+    this.locale = 'en',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,20 @@ class GuardFindingsCard extends StatelessWidget {
               color: r.passed ? Colors.green : Colors.red,
             ),
             title: Text(r.scanner),
-            subtitle: r.reason != null ? Text(r.reason!) : null,
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (r.reason != null) Text(r.reason!),
+                Text(
+                  r.userMessage(locale: locale),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(

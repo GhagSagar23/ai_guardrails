@@ -58,4 +58,144 @@ class GuardConfig {
           ToolOutputScanner(action: GuardAction.block),
         ],
       );
+
+  /// 4-state customer support flow for the Flow tab demo.
+  static ConversationFlow supportFlow() => ConversationFlow(
+        name: 'support',
+        initialState: 'greeting',
+        states: {
+          'greeting': FlowState(
+            name: 'greeting',
+            transitions: [
+              FlowTransition(intent: 'billing', targetState: 'billing'),
+              FlowTransition(intent: 'support', targetState: 'support'),
+            ],
+          ),
+          'billing': FlowState(
+            name: 'billing',
+            allowedTopics: {
+              'bill',
+              'invoice',
+              'payment',
+              'charge',
+              'subscription',
+              'plan',
+              'price',
+              'cost',
+              'refund',
+              'money',
+              'pay',
+              'upgrade',
+            },
+            transitions: [
+              FlowTransition(intent: 'support', targetState: 'support'),
+              FlowTransition(intent: 'goodbye', targetState: 'farewell'),
+            ],
+          ),
+          'support': FlowState(
+            name: 'support',
+            allowedTopics: {
+              'bug',
+              'error',
+              'issue',
+              'problem',
+              'help',
+              'fix',
+              'broken',
+              'crash',
+              'feature',
+              'work',
+              'slow',
+              'down',
+            },
+            transitions: [
+              FlowTransition(intent: 'billing', targetState: 'billing'),
+              FlowTransition(intent: 'goodbye', targetState: 'farewell'),
+            ],
+          ),
+          'farewell': FlowState(
+            name: 'farewell',
+            terminal: true,
+          ),
+        },
+        canonicalForms: [
+          CanonicalForm(
+            intent: 'billing',
+            keywords: {
+              'bill',
+              'billing',
+              'invoice',
+              'payment',
+              'charge',
+              'subscription',
+              'plan',
+              'price',
+              'cost',
+            },
+          ),
+          CanonicalForm(
+            intent: 'support',
+            keywords: {
+              'bug',
+              'error',
+              'issue',
+              'problem',
+              'fix',
+              'broken',
+              'crash',
+              'support',
+            },
+          ),
+          CanonicalForm(
+            intent: 'goodbye',
+            keywords: {'bye', 'goodbye', 'thank', 'thanks', 'done', 'exit'},
+          ),
+        ],
+      );
+
+  /// Flow tab: wraps [GuardSession] + [ConversationFlow].
+  static FlowGuardSession flowSession() => FlowGuardSession(
+        session: GuardSession(
+          guard: AiGuard(
+            inputScanners: [
+              PiiScanner(action: GuardAction.redact),
+              PromptInjectionScanner(threshold: 0.5),
+            ],
+            onFailActions: {
+              'pii': OnFailAction.warn,
+              'prompt_injection': OnFailAction.block,
+            },
+          ),
+        ),
+        flow: supportFlow(),
+      );
+
+  /// Session tab: [GuardSession] with [EscalationPolicy] for escalation demo.
+  static GuardSession escalationSession({
+    void Function(EscalationLevel, EscalationLevel)? onEscalation,
+  }) =>
+      GuardSession(
+        guard: AiGuard(
+          inputScanners: [
+            PiiScanner(action: GuardAction.redact),
+            PromptInjectionScanner(threshold: 0.5),
+            InvisibleTextScanner(),
+          ],
+          outputScanners: [
+            CompetitorMentionScanner(
+              ['Acme', 'Globex'],
+              action: GuardAction.warn,
+            ),
+          ],
+          onFailActions: {
+            'pii': OnFailAction.warn,
+            'prompt_injection': OnFailAction.warn,
+          },
+        ),
+        escalationPolicy: const EscalationPolicy(
+          blockThreshold: 3,
+          terminateThreshold: 5,
+        ),
+        onEscalation: onEscalation,
+      );
 }

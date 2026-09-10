@@ -25,7 +25,8 @@ class ChatMessage {
 
 class ChatScreen extends StatefulWidget {
   final LlmProvider? provider;
-  const ChatScreen({super.key, this.provider});
+  final String locale;
+  const ChatScreen({super.key, this.provider, this.locale = 'en'});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -260,6 +261,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               padding: const EdgeInsets.only(top: 4),
                               child: GuardFindingsCard(
                                 results: _outputFindings(message.outcome),
+                                locale: widget.locale,
                               ),
                             ),
                         ],

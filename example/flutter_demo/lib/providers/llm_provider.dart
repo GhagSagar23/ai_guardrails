@@ -114,6 +114,46 @@ class MockLlmProvider implements LlmProvider {
   }
 }
 
+class MockFlowLlmProvider implements LlmProvider {
+  @override
+  Future<String> generate(String prompt) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    final lower = prompt.toLowerCase();
+
+    if (lower.contains('bill') ||
+        lower.contains('payment') ||
+        lower.contains('invoice') ||
+        lower.contains('price') ||
+        lower.contains('cost')) {
+      return 'I can help with billing. Our plans start at \$29/month '
+          '(individual), \$99/month (team), and custom enterprise pricing.';
+    }
+    if (lower.contains('refund')) {
+      return 'Refunds are available within 30 days of purchase. '
+          'I can start the process for you right now.';
+    }
+    if (lower.contains('bug') ||
+        lower.contains('error') ||
+        lower.contains('problem') ||
+        lower.contains('crash') ||
+        lower.contains('broken')) {
+      return 'Sorry to hear about that issue. Can you tell me which '
+          'feature is affected and what steps reproduce the problem?';
+    }
+    if (lower.contains('feature') || lower.contains('help')) {
+      return 'We offer real-time collaboration, version control, '
+          'automated backups, and AI-powered search.';
+    }
+    if (lower.contains('bye') ||
+        lower.contains('thank') ||
+        lower.contains('done')) {
+      return 'Thank you for contacting Nimbus support! Have a great day.';
+    }
+    return 'Welcome to Nimbus support! I can help with billing questions '
+        'or technical issues. What do you need help with?';
+  }
+}
+
 class MockRagLlmProvider implements LlmProvider {
   String _context;
 

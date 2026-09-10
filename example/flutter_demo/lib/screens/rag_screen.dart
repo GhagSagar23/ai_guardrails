@@ -7,7 +7,8 @@ import '../widgets/guard_findings_card.dart';
 
 class RagScreen extends StatefulWidget {
   final List<String>? initialCorpus;
-  const RagScreen({super.key, this.initialCorpus});
+  final String locale;
+  const RagScreen({super.key, this.initialCorpus, this.locale = 'en'});
 
   @override
   State<RagScreen> createState() => _RagScreenState();
@@ -233,7 +234,10 @@ class _RagScreenState extends State<RagScreen> {
                 ),
               ),
             const SizedBox(height: 12),
-            GuardFindingsCard(results: _answerOutcome!.outputResults),
+            GuardFindingsCard(
+              results: _answerOutcome!.outputResults,
+              locale: widget.locale,
+            ),
           ],
         ],
       ),

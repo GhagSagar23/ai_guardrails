@@ -82,6 +82,23 @@ void main() {
       expect(find.byIcon(Icons.shield), findsOneWidget);
     });
 
+    testWidgets('shows localized message for non-en locale', (tester) async {
+      await tester.pumpWidget(_wrap(
+        GuardFindingsCard(
+          locale: 'ja',
+          results: [
+            ScanResult.warn('pii', 'text',
+                findings: [const Finding(type: 'pii.email')],
+                reason: 'email detected'),
+          ],
+        ),
+      ));
+      await tester.tap(find.byType(ExpansionTile));
+      await tester.pumpAndSettle();
+      // Japanese message for PII should appear.
+      expect(find.textContaining('個人情報'), findsOneWidget);
+    });
+
     testWidgets('shows multiple scanners', (tester) async {
       await tester.pumpWidget(_wrap(
         GuardFindingsCard(results: [
