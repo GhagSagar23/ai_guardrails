@@ -54,3 +54,4 @@ export 'src/guard_probe.dart';
 export 'src/guard_tracer.dart';
 export 'src/guard_messages.dart';
 export 'src/scanner_hub.dart';
+export 'src/conversation_flow.dart';

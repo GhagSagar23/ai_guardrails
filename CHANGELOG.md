@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.0
+
+- **`ConversationFlow`** — declarative state machine for multi-turn conversations.
+  Define states with topic rails and intent-based transitions via JSON config.
+  `FlowState` constrains allowed topics per state; `FlowTransition` maps intents
+  to state changes. `CanonicalForm` classifies user input into intents via
+  word-boundary keyword matching (zero deps) or optional `LlmCallback` for
+  semantic classification.
+- **`FlowGuardSession`** — conversation-level flow enforcement wrapping
+  `GuardSession`. On each turn: classifies intent, validates transitions,
+  enforces topic rails, then delegates to the scanner pipeline. Blocks off-topic
+  input, prevents invalid transitions, and stops processing at terminal states.
+  Supports manual `transitionTo()` for system-initiated state changes, and
+  `toJson()`/`restore()` for session persistence.
+
 ## 1.3.0
 
 - **`GuardTracer`** — abstract OTel-compatible tracing interface. `AiGuard`
