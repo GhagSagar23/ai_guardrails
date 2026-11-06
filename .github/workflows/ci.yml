@@ -36,6 +36,7 @@ jobs:
           - ai_guardrails_server
           - ai_guardrails_google_moderation
           - ai_guardrails_perspective
+          - ai_guardrails_scanners_example
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1

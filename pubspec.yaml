@@ -22,6 +22,7 @@ workspace:
   - packages/ai_guardrails_server
   - packages/ai_guardrails_google_moderation
   - packages/ai_guardrails_perspective
+  - packages/ai_guardrails_scanners_example
 
 dev_dependencies:
   lints: ^6.0.0
