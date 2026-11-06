@@ -1,0 +1,25 @@
+name: ai_guardrails_scanners_example
+description: >-
+  Example scanner plugin package for ai_guardrails — demonstrates the
+  ScannerPlugin convention for third-party scanner distribution.
+version: 0.1.0
+repository: https://github.com/GhagSagar23/ai_guardrails/tree/master/packages/ai_guardrails_scanners_example
+issue_tracker: https://github.com/GhagSagar23/ai_guardrails/issues
+topics:
+  - ai
+  - security
+  - guardrails
+  - plugin
+  - example
+
+environment:
+  sdk: ^3.5.0
+
+resolution: workspace
+
+dependencies:
+  ai_guardrails: ">=0.8.0 <2.0.0"
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0
