@@ -20,6 +20,7 @@ class GuardedGenerativeModel {
   final AiGuard _guard;
   final OnBlock _onBlock;
 
+  /// Creates a [GuardedGenerativeModel] wrapping [model] with [guard].
   GuardedGenerativeModel({
     required GenerativeModel model,
     required AiGuard guard,
@@ -342,9 +343,13 @@ class GuardedResponse {
 
 /// Thrown when a scanner blocks and [OnBlock.throwException] is set.
 class GuardBlockedException implements Exception {
+  /// The pipeline stage that triggered the block.
   final ScanStage stage;
+
+  /// Human-readable reason the request was blocked.
   final String reason;
 
+  /// Creates a [GuardBlockedException] for the given [stage] and [reason].
   const GuardBlockedException({required this.stage, required this.reason});
 
   @override
