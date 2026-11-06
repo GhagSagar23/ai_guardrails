@@ -20,6 +20,7 @@ class GuardMetrics {
   /// Per-scanner metrics.
   final List<ScannerMetrics> scanners;
 
+  /// Creates a [GuardMetrics].
   const GuardMetrics({
     required this.totalDuration,
     required this.inputDuration,
@@ -32,11 +33,19 @@ class GuardMetrics {
 
 /// Per-scanner metrics within a [GuardMetrics] snapshot.
 class ScannerMetrics {
+  /// The name.
   final String name;
+
+  /// The scan stage this applies to.
   final ScanStage stage;
+
+  /// Whether no scanner blocked.
   final bool passed;
+
+  /// Number of findings.
   final int findingCount;
 
+  /// Creates a [ScannerMetrics].
   const ScannerMetrics({
     required this.name,
     required this.stage,

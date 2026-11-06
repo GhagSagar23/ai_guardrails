@@ -29,8 +29,10 @@ int _wholeMatch(Match m) => m.start;
 /// never echoed in [Finding.match] (it would leak the secret); use the
 /// char offsets to locate it in the original text.
 class SecretScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [SecretScanner].
   SecretScanner({this.action = GuardAction.block});
 
   @override

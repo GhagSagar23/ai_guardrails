@@ -4,16 +4,22 @@ import 'scanner.dart';
 
 /// A transition from one flow state to another, triggered by an intent.
 class FlowTransition {
+  /// The intent name.
   final String intent;
+
+  /// The state to transition to.
   final String targetState;
 
+  /// Creates a [FlowTransition].
   const FlowTransition({required this.intent, required this.targetState});
 
+  /// Creates a [FlowTransition] from JSON.
   factory FlowTransition.fromJson(Map<String, dynamic> json) => FlowTransition(
         intent: json['intent'] as String,
         targetState: json['targetState'] as String,
       );
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'intent': intent,
         'targetState': targetState,
@@ -28,13 +34,21 @@ class FlowTransition {
 /// - [transitions]: intent-to-state mappings.
 /// - [terminal]: if true, no further turns are processed.
 class FlowState {
+  /// The name.
   final String name;
+
+  /// Topics that are permitted.
   final Set<String> allowedTopics;
+
+  /// Outgoing transitions.
   final List<FlowTransition> transitions;
+
+  /// Whether this is a terminal state.
   final bool terminal;
 
   final List<RegExp> _topicPatterns;
 
+  /// Creates a [FlowState].
   FlowState({
     required this.name,
     this.allowedTopics = const {},
@@ -45,11 +59,13 @@ class FlowState {
             RegExp('\\b${RegExp.escape(t)}\\b', caseSensitive: false),
         ];
 
+  /// Whether [text] matches this state's allowed topics.
   bool matchesTopic(String text) {
     if (allowedTopics.isEmpty) return true;
     return _topicPatterns.any((p) => p.hasMatch(text));
   }
 
+  /// Returns the target state for [intent], or null.
   String? targetFor(String intent) {
     for (final t in transitions) {
       if (t.intent == intent) return t.targetState;
@@ -57,6 +73,7 @@ class FlowState {
     return null;
   }
 
+  /// Creates a [FlowState] from JSON.
   factory FlowState.fromJson(String name, Map<String, dynamic> json) =>
       FlowState(
         name: name,
@@ -70,6 +87,7 @@ class FlowState {
         terminal: json['terminal'] as bool? ?? false,
       );
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         if (allowedTopics.isNotEmpty) 'allowedTopics': allowedTopics.toList(),
         if (transitions.isNotEmpty)
@@ -85,12 +103,18 @@ class FlowState {
 /// on [FlowGuardSession], the [description] is sent to the LLM for
 /// semantic classification.
 class CanonicalForm {
+  /// The intent name.
   final String intent;
+
+  /// Keywords that signal this intent.
   final Set<String> keywords;
+
+  /// Optional human-readable description.
   final String? description;
 
   final List<RegExp> _patterns;
 
+  /// Creates a [CanonicalForm].
   CanonicalForm({
     required this.intent,
     required this.keywords,
@@ -100,8 +124,10 @@ class CanonicalForm {
             RegExp('\\b${RegExp.escape(k)}\\b', caseSensitive: false),
         ];
 
+  /// Whether [text] matches any keyword.
   bool matchesKeywords(String text) => _patterns.any((p) => p.hasMatch(text));
 
+  /// Creates a [CanonicalForm] from JSON.
   factory CanonicalForm.fromJson(Map<String, dynamic> json) => CanonicalForm(
         intent: json['intent'] as String,
         keywords:
@@ -109,6 +135,7 @@ class CanonicalForm {
         description: json['description'] as String?,
       );
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'intent': intent,
         'keywords': keywords.toList(),
@@ -146,11 +173,19 @@ class CanonicalForm {
 /// });
 /// ```
 class ConversationFlow {
+  /// The name.
   final String name;
+
+  /// States by name.
   final Map<String, FlowState> states;
+
+  /// Name of the starting state.
   final String initialState;
+
+  /// Canonical intents recognised in user messages.
   final List<CanonicalForm> canonicalForms;
 
+  /// Creates a [ConversationFlow].
   ConversationFlow({
     required this.name,
     required this.states,
@@ -190,6 +225,7 @@ class ConversationFlow {
     return null;
   }
 
+  /// Creates a [ConversationFlow] from JSON.
   factory ConversationFlow.fromJson(Map<String, dynamic> json) {
     final statesJson = json['states'] as Map<String, dynamic>;
     final states = <String, FlowState>{};
@@ -208,6 +244,7 @@ class ConversationFlow {
     );
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'name': name,
         'initialState': initialState,
@@ -226,13 +263,19 @@ class ConversationFlow {
 /// 3. If intent triggers a transition, run scanners and move state on pass.
 /// 4. If no transition, enforce current state's topic rail, then run scanners.
 class FlowGuardSession {
+  /// The underlying guard session.
   final GuardSession session;
+
+  /// The conversation flow definition.
   final ConversationFlow flow;
+
+  /// The LLM callback used by this scanner.
   final LlmCallback? llmCallback;
 
   String _currentState;
   final _stateHistory = <String>[];
 
+  /// Creates a [FlowGuardSession].
   FlowGuardSession({
     required this.session,
     required this.flow,
@@ -241,10 +284,19 @@ class FlowGuardSession {
     _stateHistory.add(flow.initialState);
   }
 
+  /// The current flow state name.
   String get currentState => _currentState;
+
+  /// States visited so far, in order.
   List<String> get stateHistory => List.unmodifiable(_stateHistory);
+
+  /// Whether the current state is terminal.
   bool get isTerminal => flow.states[_currentState]?.terminal ?? false;
+
+  /// Number of turns processed.
   int get turnCount => session.turnCount;
+
+  /// The current escalation level.
   EscalationLevel get escalationLevel => session.escalationLevel;
 
   /// Run a turn with flow enforcement.
@@ -322,6 +374,7 @@ class FlowGuardSession {
     return true;
   }
 
+  /// Resets the session to its initial state.
   void reset() {
     _currentState = flow.initialState;
     _stateHistory.clear();
@@ -329,12 +382,14 @@ class FlowGuardSession {
     session.reset();
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'currentState': _currentState,
         'stateHistory': List<String>.from(_stateHistory),
         'session': session.toJson(),
       };
 
+  /// Restores a [FlowGuardSession] from saved state.
   factory FlowGuardSession.restore({
     required GuardSession session,
     required ConversationFlow flow,

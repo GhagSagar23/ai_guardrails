@@ -7,9 +7,10 @@ class InvisibleCategory {
   /// Category name, used in finding types as `invisible.<name>`.
   final String name;
 
-  /// True when [codePoint] belongs to this category.
+  /// True when `codePoint` belongs to this category.
   final bool Function(int codePoint) contains;
 
+  /// Creates a [InvisibleCategory].
   const InvisibleCategory(this.name, this.contains);
 }
 
@@ -50,6 +51,7 @@ class InvisibleTextScanner implements Scanner {
   /// What to do with detected invisibles.
   final GuardAction action;
 
+  /// Creates a [InvisibleTextScanner].
   const InvisibleTextScanner({this.action = GuardAction.redact});
 
   @override

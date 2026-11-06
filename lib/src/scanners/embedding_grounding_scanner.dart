@@ -12,11 +12,13 @@ import '../scanner.dart';
 ///
 /// Output-stage only.
 class EmbeddingGroundingScanner extends AsyncScanner with EmbeddingDependent {
+  /// Source chunks the output must be grounded in.
   final List<String> sourceChunks;
 
   /// Minimum cosine similarity to consider output grounded. Default 0.7.
   final double threshold;
 
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// Optional LLM callback for NLI entailment checks. When provided,
@@ -25,6 +27,7 @@ class EmbeddingGroundingScanner extends AsyncScanner with EmbeddingDependent {
 
   List<List<double>>? _cachedSourceEmbeddings;
 
+  /// Creates a [EmbeddingGroundingScanner].
   EmbeddingGroundingScanner({
     required this.sourceChunks,
     this.threshold = 0.7,

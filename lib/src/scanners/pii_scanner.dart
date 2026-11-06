@@ -19,6 +19,7 @@ class PiiScanner implements Scanner {
   /// Custom replacement for a redacted span; defaults to `[TYPE]`.
   final String Function(Finding)? placeholder;
 
+  /// Creates a [PiiScanner].
   PiiScanner({
     this.action = GuardAction.redact,
     this.types,

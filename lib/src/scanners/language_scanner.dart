@@ -2,15 +2,34 @@ import '../scanner.dart';
 
 /// Unicode script categories detected by [LanguageScanner].
 enum UnicodeScript {
+  /// Latin script.
   latin,
+
+  /// Cyrillic script.
   cyrillic,
+
+  /// Greek script.
   greek,
+
+  /// Arabic script.
   arabic,
+
+  /// Devanagari script.
   devanagari,
+
+  /// CJK ideographs.
   cjk,
+
+  /// Hangul (Korean) script.
   hangul,
+
+  /// Hiragana script.
   hiragana,
+
+  /// Katakana script.
   katakana,
+
+  /// Thai script.
   thai,
 }
 
@@ -21,6 +40,7 @@ enum UnicodeScript {
 /// [threshold], the text is flagged. Useful for catching output-language
 /// surprises or cross-script prompt injection.
 class LanguageScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// Scripts expected in the text. Default: Latin only.
@@ -30,6 +50,7 @@ class LanguageScanner implements Scanner {
   /// Default 0.7 — allows up to 30% unexpected script (names, loanwords).
   final double threshold;
 
+  /// Creates a [LanguageScanner].
   LanguageScanner({
     this.action = GuardAction.block,
     this.expectedScripts = const {UnicodeScript.latin},

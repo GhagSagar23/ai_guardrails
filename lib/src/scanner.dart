@@ -19,7 +19,13 @@ typedef LlmCallback = Future<String> Function(String prompt);
 typedef EmbeddingCallback = Future<List<double>> Function(String text);
 
 /// Where in the LLM round-trip a scanner runs.
-enum ScanStage { input, output }
+enum ScanStage {
+  /// Scan applied to user input before the LLM call.
+  input,
+
+  /// Scan applied to LLM output before it is returned.
+  output,
+}
 
 /// What happens to text when a scanner detects a violation.
 ///
@@ -27,7 +33,22 @@ enum ScanStage { input, output }
 /// * [redact] — replace matched spans with a placeholder and continue.
 /// * [hash]   — replace matched spans with a stable one-way token.
 /// * [warn]   — record findings but let the text pass through unchanged.
-enum GuardAction { block, redact, hash, warn, transform }
+enum GuardAction {
+  /// Reject the text outright.
+  block,
+
+  /// Replace findings with a redaction placeholder.
+  redact,
+
+  /// Replace findings with a stable hash.
+  hash,
+
+  /// Allow the text but record a warning.
+  warn,
+
+  /// Rewrite the text via a transformation.
+  transform,
+}
 
 /// A single detected issue inside a scanned string.
 class Finding {
@@ -36,6 +57,8 @@ class Finding {
 
   /// Char offsets into the scanned text; both `-1` when not span-based.
   final int start;
+
+  /// End offset of the match.
   final int end;
 
   /// The matched substring. Omitted (`null`) when echoing it would leak data.
@@ -44,6 +67,7 @@ class Finding {
   /// Detector confidence, `0.0`..`1.0`.
   final double confidence;
 
+  /// Creates a [Finding].
   const Finding({
     required this.type,
     this.start = -1,
@@ -93,6 +117,7 @@ class ScanResult {
   /// undo them. Populated by scanners using [GuardAction.transform].
   final Map<String, String> transformations;
 
+  /// Creates a [ScanResult].
   const ScanResult({
     required this.scanner,
     required this.passed,
@@ -155,6 +180,7 @@ class ScanResult {
   })  : passed = true,
         redactionMap = const {};
 
+  /// Whether any findings were reported.
   bool get hasFindings => findings.isNotEmpty;
 
   @override
@@ -170,7 +196,10 @@ class ScanResult {
 /// either silently no-op (failClosed: false) or block with a misleading
 /// "type cast" error (failClosed: true).
 sealed class ScannerBase {
+  /// The name.
   String get name;
+
+  /// The stages this scanner runs at.
   Set<ScanStage> get stages;
 }
 
@@ -216,6 +245,7 @@ abstract class AsyncScanner implements ScannerBase {
 mixin LlmDependent {
   LlmCallback? _llmCallback;
 
+  /// The LLM callback used by this scanner.
   LlmCallback get llmCallback {
     if (_llmCallback == null) {
       throw StateError(
@@ -225,6 +255,7 @@ mixin LlmDependent {
     return _llmCallback!;
   }
 
+  /// The LLM callback used by this scanner.
   set llmCallback(LlmCallback cb) => _llmCallback = cb;
 }
 
@@ -235,6 +266,7 @@ mixin LlmDependent {
 mixin EmbeddingDependent {
   EmbeddingCallback? _embeddingCallback;
 
+  /// The embedding callback used by this scanner.
   EmbeddingCallback get embeddingCallback {
     if (_embeddingCallback == null) {
       throw StateError(
@@ -244,5 +276,6 @@ mixin EmbeddingDependent {
     return _embeddingCallback!;
   }
 
+  /// The embedding callback used by this scanner.
   set embeddingCallback(EmbeddingCallback cb) => _embeddingCallback = cb;
 }

@@ -32,6 +32,7 @@ class GuardLog {
   /// Total findings across all scanners.
   final int totalFindings;
 
+  /// Creates a [GuardLog].
   const GuardLog({
     required this.timestampUs,
     required this.blocked,
@@ -43,7 +44,7 @@ class GuardLog {
     required this.totalFindings,
   });
 
-  /// Build from a completed [run] outcome.
+  /// Build from a completed `AiGuard.run` outcome.
   factory GuardLog.fromOutcome({
     required bool blocked,
     ScanStage? blockedStage,
@@ -88,6 +89,7 @@ class GuardLog {
     );
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'timestamp_us': timestampUs,
         'blocked': blocked,
@@ -99,6 +101,7 @@ class GuardLog {
         'total_findings': totalFindings,
       };
 
+  /// Serializes this to a JSON string.
   String toJsonString() => jsonEncode(toJson());
 
   static int _fnv1a(String s) {
@@ -113,13 +116,25 @@ class GuardLog {
 
 /// Per-scanner audit entry within a [GuardLog].
 class ScannerLogEntry {
+  /// The name.
   final String name;
+
+  /// The scan stage this applies to.
   final ScanStage stage;
+
+  /// Whether no scanner blocked.
   final bool passed;
+
+  /// The scanner score.
   final double score;
+
+  /// Number of findings.
   final int findingCount;
+
+  /// Types of the findings.
   final List<String> findingTypes;
 
+  /// Creates a [ScannerLogEntry].
   const ScannerLogEntry({
     required this.name,
     required this.stage,
@@ -129,6 +144,7 @@ class ScannerLogEntry {
     this.findingTypes = const [],
   });
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'name': name,
         'stage': stage.name,

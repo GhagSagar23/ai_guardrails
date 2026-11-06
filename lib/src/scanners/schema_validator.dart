@@ -18,6 +18,7 @@ class SchemaValidator implements Scanner {
   /// Block on violation, or merely warn.
   final GuardAction action;
 
+  /// Creates a [SchemaValidator].
   SchemaValidator(this.schema, {this.action = GuardAction.block});
 
   @override

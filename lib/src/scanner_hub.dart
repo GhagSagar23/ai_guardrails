@@ -32,9 +32,11 @@ abstract class ScannerPlugin {
 /// // Scanners now available via ScannerRegistry.instance
 /// ```
 class ScannerHub {
+  /// The scanner registry used to build scanners.
   final ScannerRegistry registry;
   final _plugins = <ScannerPlugin>[];
 
+  /// Creates a [ScannerHub].
   ScannerHub({ScannerRegistry? registry})
       : registry = registry ?? ScannerRegistry.instance;
 

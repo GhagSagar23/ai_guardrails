@@ -146,8 +146,10 @@ class PolicyProfile {
     },
   );
 
+  /// All built-in profiles.
   static const values = [healthcare, finance, education, enterprise];
 
+  /// The name.
   final String name;
 
   /// The raw JSON config — merge/override before building.

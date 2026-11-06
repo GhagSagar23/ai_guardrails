@@ -16,11 +16,19 @@ import 'scanner.dart';
 /// {"maxScore": "injection.*", "gt": 0.8}
 /// ```
 class PolicyCondition {
+  /// The aggregate function applied to matching findings.
   final String aggregate;
+
+  /// The finding-type pattern to match.
   final String pattern;
+
+  /// The comparison operator.
   final String operator;
+
+  /// The threshold value.
   final double value;
 
+  /// Creates a [PolicyCondition].
   const PolicyCondition({
     required this.aggregate,
     required this.pattern,
@@ -99,6 +107,7 @@ class PolicyCondition {
     };
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {aggregate: pattern, operator: value};
 }
 
@@ -109,11 +118,16 @@ class PolicyCondition {
 /// {"when": {"count": "pii.*", "gt": 3}, "then": "block"}
 /// ```
 class PolicyRule {
+  /// The condition that triggers this rule.
   final PolicyCondition condition;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [PolicyRule].
   const PolicyRule({required this.condition, required this.action});
 
+  /// Creates a [PolicyRule] from JSON.
   factory PolicyRule.fromJson(Map<String, dynamic> json) {
     final when = json['when'];
     if (when is! Map<String, dynamic>) {
@@ -144,6 +158,7 @@ class PolicyRule {
     return condition.evaluate(findings) ? action : null;
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'when': condition.toJson(),
         'then': action.name,

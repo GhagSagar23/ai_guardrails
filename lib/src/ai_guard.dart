@@ -49,6 +49,7 @@ class GuardOutcome {
   /// Per-scanner results for the output pipeline.
   final List<ScanResult> outputResults;
 
+  /// Creates a [GuardOutcome].
   const GuardOutcome({
     required this.blocked,
     this.blockedStage,
@@ -117,6 +118,7 @@ class AiGuard {
   /// Zero cost when `null`.
   final GuardTracer? tracer;
 
+  /// Creates a [AiGuard].
   AiGuard({
     this.inputScanners = const [],
     this.outputScanners = const [],
@@ -573,13 +575,27 @@ class AiGuard {
   }
 }
 
+/// Result of running one scanner stage.
 class StageRun {
+  /// The text under test.
   final String text;
+
+  /// Per-scanner results.
   final List<ScanResult> results;
+
+  /// The scanner result that blocked, if any.
   final ScanResult? blocker;
+
+  /// Placeholder-to-original map for redactions.
   final Map<String, String> redactionMap;
+
+  /// Applied transformations.
   final Map<String, String> transformations;
+
+  /// The failure action in effect, if any.
   final OnFailAction? failAction;
+
+  /// Creates a [StageRun].
   StageRun(this.text, this.results, this.blocker, this.redactionMap,
       [this.transformations = const {}, this.failAction]);
 }
@@ -604,6 +620,7 @@ class ChunkResult {
   /// The blocking scanner's reason, or `null` when [passed] is `true`.
   final String? dropReason;
 
+  /// Creates a [ChunkResult].
   const ChunkResult({
     required this.index,
     required this.originalChunk,
@@ -619,6 +636,7 @@ class RetrievalResult {
   /// Per-chunk scan outcomes, in the same order as the input list.
   final List<ChunkResult> chunks;
 
+  /// Creates a [RetrievalResult].
   const RetrievalResult(this.chunks);
 
   /// Processed text of chunks that passed all scanners.
@@ -642,20 +660,37 @@ class RetrievalResult {
 
 /// A tool execution result to scan.
 class ToolOutput {
+  /// The tool name.
   final String toolName;
+
+  /// The tool output content.
   final String content;
+
+  /// Creates a [ToolOutput].
   const ToolOutput({required this.toolName, required this.content});
 }
 
 /// Scan outcome for a single tool output.
 class ToolOutputScan {
+  /// The tool name.
   final String toolName;
+
+  /// The content before scanning.
   final String originalContent;
+
+  /// The content after scanning.
   final String processedContent;
+
+  /// Whether no scanner blocked.
   final bool passed;
+
+  /// Per-scanner results.
   final List<ScanResult> results;
+
+  /// Reason the content was blocked, or null.
   final String? blockReason;
 
+  /// Creates a [ToolOutputScan].
   const ToolOutputScan({
     required this.toolName,
     required this.originalContent,
@@ -668,7 +703,10 @@ class ToolOutputScan {
 
 /// Outcome of [AiGuard.runToolOutputStage].
 class ToolOutputResult {
+  /// Per-tool scan results.
   final List<ToolOutputScan> scans;
+
+  /// Creates a [ToolOutputResult].
   const ToolOutputResult(this.scans);
 
   /// Processed content of tool outputs that passed all scanners.

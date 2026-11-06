@@ -19,6 +19,7 @@ import 'on_fail_action.dart';
 /// );
 /// ```
 class GuardedLlmCall {
+  /// The guard being used.
   final AiGuard guard;
 
   /// Maximum number of retry attempts when [OnFailAction.reask] fires.
@@ -29,6 +30,7 @@ class GuardedLlmCall {
   final String Function(String original, GuardOutcome failed)?
       retryPromptBuilder;
 
+  /// Creates a [GuardedLlmCall].
   GuardedLlmCall({
     required this.guard,
     this.maxReasks = 3,

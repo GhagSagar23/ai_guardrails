@@ -13,6 +13,7 @@ import 'scanner.dart';
 class GuardMessages {
   final Map<String, Map<String, String>> _custom;
 
+  /// Creates a [GuardMessages].
   const GuardMessages(
       {Map<String, Map<String, String>> customMessages = const {}})
       : _custom = customMessages;

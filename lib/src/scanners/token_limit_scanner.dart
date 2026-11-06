@@ -14,6 +14,7 @@ class TokenLimitScanner implements Scanner {
   /// Block on overflow, or merely warn.
   final GuardAction action;
 
+  /// Creates a [TokenLimitScanner].
   TokenLimitScanner({this.maxTokens = 4096, this.action = GuardAction.block});
 
   static final RegExp _token = RegExp(r'\w+|[^\w\s]+');

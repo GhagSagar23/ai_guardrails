@@ -7,10 +7,16 @@ import '../scanner.dart';
 /// Computes Flesch-Kincaid grade level and Coleman-Liau index, then checks
 /// against [minGrade] and [maxGrade]. Pure math — zero dependencies.
 class ReadingLevelScanner implements Scanner {
+  /// Minimum reading grade level.
   final double? minGrade;
+
+  /// Maximum reading grade level.
   final double? maxGrade;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [ReadingLevelScanner].
   ReadingLevelScanner({
     this.minGrade,
     this.maxGrade,

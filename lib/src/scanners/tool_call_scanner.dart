@@ -6,11 +6,16 @@ import 'prompt_injection_scanner.dart';
 
 /// A tool/function call emitted by an LLM.
 class ToolCall {
+  /// The name.
   final String name;
+
+  /// The call arguments.
   final Map<String, dynamic> arguments;
 
+  /// Creates a [ToolCall].
   const ToolCall({required this.name, this.arguments = const {}});
 
+  /// Creates a [ToolCall] from JSON.
   factory ToolCall.fromJson(Map<String, dynamic> json) {
     final name = json['name'];
     if (name is! String || name.isEmpty) {
@@ -23,6 +28,7 @@ class ToolCall {
     );
   }
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {'name': name, 'arguments': arguments};
 
   @override
@@ -39,6 +45,7 @@ class ToolCall {
 /// This is an **output-stage** scanner: it checks what the model wants to
 /// execute, not what the user typed.
 class ToolCallScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// When non-null, only these tool names are permitted.
@@ -70,6 +77,7 @@ class ToolCallScanner implements Scanner {
   /// the orchestrator. Used for depth and circular-reference checks.
   final List<String> callStack;
 
+  /// Creates a [ToolCallScanner].
   ToolCallScanner({
     this.action = GuardAction.block,
     this.allowedTools,

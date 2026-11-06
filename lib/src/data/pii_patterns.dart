@@ -7,14 +7,31 @@ library;
 /// Region a pattern applies to. `all`-ish coverage is expressed by listing
 /// every relevant locale in [PiiPattern.locales].
 enum PiiLocale {
+  /// United States.
   us,
+
+  /// European Union.
   eu,
+
+  /// India.
   india,
+
+  /// Brazil.
   brazil,
+
+  /// Mexico.
   mexico,
+
+  /// Japan.
   japan,
+
+  /// South Korea.
   southKorea,
+
+  /// Canada.
   canada,
+
+  /// Australia.
   australia
 }
 
@@ -35,6 +52,7 @@ class PiiPattern {
   /// Minimum digit count for Luhn validation. Default 12 (credit cards).
   final int luhnMinDigits;
 
+  /// Creates a [PiiPattern].
   const PiiPattern({
     required this.type,
     required this.locales,

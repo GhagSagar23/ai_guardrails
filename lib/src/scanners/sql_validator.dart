@@ -5,9 +5,13 @@ import '../scanner.dart';
 /// Default allows only `SELECT`. Detects dangerous statements (DROP, ALTER,
 /// DELETE, TRUNCATE, EXEC, etc.) even when embedded in multi-statement strings.
 class SqlValidator implements Scanner {
+  /// SQL statement types permitted.
   final Set<String> allowedStatements;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Statement types allowed by default.
   static const defaultAllowed = {'SELECT'};
 
   // ponytail: match statement keywords at word boundary, case-insensitive
@@ -20,6 +24,7 @@ class SqlValidator implements Scanner {
     r'--[^\n]*|/\*[\s\S]*?\*/',
   );
 
+  /// Creates a [SqlValidator].
   SqlValidator({
     Set<String>? allowedStatements,
     this.action = GuardAction.block,
