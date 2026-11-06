@@ -3,26 +3,41 @@ import 'dart:math' show max;
 import 'ai_guard.dart';
 
 /// Escalation levels for [GuardSession].
-enum EscalationLevel { warn, block, terminate }
+enum EscalationLevel {
+  /// Violations are surfaced as warnings only.
+  warn,
+
+  /// Offending turns are blocked.
+  block,
+
+  /// The session is terminated.
+  terminate,
+}
 
 /// Per-finding-type escalation thresholds.
 ///
 /// Attach to [EscalationPolicy.typeRules] keyed by finding type or glob
 /// pattern (e.g. `pii.*` matches `pii.email`, `pii.ssn`, etc.).
 class EscalationRule {
+  /// Violation count at which turns are blocked.
   final int blockThreshold;
+
+  /// Violation count at which the session is terminated.
   final int terminateThreshold;
 
+  /// Creates a [EscalationRule].
   const EscalationRule({
     required this.blockThreshold,
     required this.terminateThreshold,
   });
 
+  /// Serializes this to a JSON-compatible map.
   Map<String, dynamic> toJson() => {
         'blockThreshold': blockThreshold,
         'terminateThreshold': terminateThreshold,
       };
 
+  /// Creates a [EscalationRule] from JSON.
   factory EscalationRule.fromJson(Map<String, dynamic> json) => EscalationRule(
         blockThreshold: json['blockThreshold'] as int,
         terminateThreshold: json['terminateThreshold'] as int,
@@ -57,6 +72,7 @@ class EscalationPolicy {
   /// When set, only the last [window] turns count toward escalation.
   final int? window;
 
+  /// Creates a [EscalationPolicy].
   const EscalationPolicy({
     this.blockThreshold = 3,
     this.terminateThreshold = 5,
@@ -71,6 +87,7 @@ class EscalationPolicy {
 /// enforcement across a conversation. The wrapped [AiGuard] and its
 /// scanners remain stateless — session state lives here.
 class GuardSession {
+  /// The guard being used.
   final AiGuard guard;
 
   /// Optional escalation policy. When null, no escalation occurs.
@@ -86,6 +103,7 @@ class GuardSession {
   final _turnFindingSnapshots = <Map<String, int>>[];
   EscalationLevel _escalationLevel = EscalationLevel.warn;
 
+  /// Creates a [GuardSession].
   GuardSession({
     required this.guard,
     this.escalationPolicy,
@@ -149,7 +167,7 @@ class GuardSession {
   /// Current escalation level.
   EscalationLevel get escalationLevel => _escalationLevel;
 
-  /// Delegates to [guard.run], accumulates findings, applies escalation.
+  /// Delegates to `AiGuard.run`, accumulates findings, applies escalation.
   Future<GuardOutcome> run({
     required String input,
     required Future<String> Function(String sanitizedInput) llmCall,

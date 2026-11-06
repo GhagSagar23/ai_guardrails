@@ -5,9 +5,13 @@ import '../scanner.dart';
 /// Heuristic scanner checking for gendered generalisations, age stereotypes,
 /// and demographic assumptions. Optional [LlmCallback] for deeper analysis.
 class BiasScanner extends AsyncScanner with LlmDependent {
+  /// Whether to use the LLM for classification.
   final bool useLlm;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [BiasScanner].
   BiasScanner({
     this.useLlm = false,
     this.action = GuardAction.warn,

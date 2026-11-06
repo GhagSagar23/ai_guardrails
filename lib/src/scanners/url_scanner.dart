@@ -2,23 +2,38 @@ import '../scanner.dart';
 
 /// Categories of suspicious URL signals.
 enum UrlCategory {
+  /// Host is a raw IP address.
   ipLiteral,
+
+  /// A data: URI.
   dataUri,
+
+  /// A javascript: URI.
   javascriptUri,
+
+  /// Top-level domain commonly used for phishing.
   suspiciousTld,
+
+  /// A URL-shortener domain.
   shortener,
+
+  /// Punycode (possible homograph) host.
   punycode,
+
+  /// Credentials embedded in the URL.
   credentials,
 }
 
 /// Detects suspicious URLs in text: IP-literal hosts, data/javascript URIs,
 /// phishing TLDs, URL shorteners, punycode (homograph), and embedded creds.
 class UrlScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// Categories to check. Default: all.
   final Set<UrlCategory> categories;
 
+  /// Creates a [UrlScanner].
   UrlScanner({
     this.action = GuardAction.block,
     this.categories = const {

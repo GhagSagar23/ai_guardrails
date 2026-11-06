@@ -11,9 +11,13 @@ import '../scanner.dart';
 /// Complements [GroundingScanner] (keyword-overlap heuristic) with semantic
 /// judgment. Create a new instance per context.
 class FactCheckScanner extends AsyncScanner with LlmDependent {
+  /// Reference context to check facts against.
   final String context;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [FactCheckScanner].
   FactCheckScanner({
     required this.context,
     this.action = GuardAction.warn,

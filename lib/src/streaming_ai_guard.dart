@@ -20,6 +20,7 @@ class GuardedChunk {
   /// Findings from scanning this segment.
   final List<Finding> findings;
 
+  /// Creates a [GuardedChunk].
   const GuardedChunk({
     required this.text,
     this.blocked = false,
@@ -44,6 +45,7 @@ class StreamingAiGuard {
   /// Default: newline. Use `RegExp(r'(?<=[.!?])\s')` for sentence boundaries.
   final Pattern boundary;
 
+  /// Creates a [StreamingAiGuard].
   StreamingAiGuard({
     List<ScannerBase> inputScanners = const [],
     List<ScannerBase> outputScanners = const [],

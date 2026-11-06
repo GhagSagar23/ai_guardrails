@@ -3,13 +3,32 @@ import 'dart:convert';
 import '../scanner.dart';
 
 /// Categories of dangerous patterns in tool execution results.
-enum ToolOutputCategory { xss, templateInjection, pathTraversal, ssrf }
+enum ToolOutputCategory {
+  /// Cross-site scripting payloads.
+  xss,
+
+  /// Template injection expressions.
+  templateInjection,
+
+  /// Path traversal sequences.
+  pathTraversal,
+
+  /// Server-side request forgery targets.
+  ssrf,
+}
 
 /// Pattern: a regex, finding type, and category.
 class ToolOutputPattern {
+  /// The category this belongs to.
   final ToolOutputCategory category;
+
+  /// The finding type reported on a match.
   final String type;
+
+  /// The regular expression to match.
   final RegExp regex;
+
+  /// Creates a [ToolOutputPattern].
   const ToolOutputPattern(this.category, this.type, this.regex);
 }
 
@@ -24,11 +43,13 @@ class ToolOutputPattern {
 /// For SQL and shell injection in tool outputs, compose with
 /// [CodeExecutionScanner] in the same pipeline.
 class ToolOutputScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// Categories to check. Default: all.
   final Set<ToolOutputCategory> categories;
 
+  /// Creates a [ToolOutputScanner].
   ToolOutputScanner({
     this.action = GuardAction.block,
     this.categories = const {
@@ -45,6 +66,7 @@ class ToolOutputScanner implements Scanner {
   @override
   Set<ScanStage> get stages => const {ScanStage.input, ScanStage.output};
 
+  /// The patterns checked by this scanner.
   static final patterns = <ToolOutputPattern>[
     // XSS
     ToolOutputPattern(ToolOutputCategory.xss, 'tool_output.xss',

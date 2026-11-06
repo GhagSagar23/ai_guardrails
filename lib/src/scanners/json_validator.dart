@@ -7,11 +7,19 @@ import '../scanner.dart';
 /// Unlike [SchemaValidator] (which checks shape), this checks syntax and
 /// structural constraints: nesting depth, array length, key count.
 class JsonValidator implements Scanner {
+  /// Maximum nesting depth.
   final int maxDepth;
+
+  /// Maximum array length.
   final int maxArrayLength;
+
+  /// Maximum number of object keys.
   final int maxKeyCount;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [JsonValidator].
   JsonValidator({
     this.maxDepth = 64,
     this.maxArrayLength = 10000,

@@ -9,10 +9,14 @@ import '../scanner.dart';
 /// instances (e.g. `profanity`, `competitor_names`) can coexist in one
 /// pipeline with distinct result names.
 class BannedPatternScanner implements Scanner {
+  /// The patterns checked by this scanner.
   final List<Pattern> patterns;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
   final String _name;
 
+  /// Creates a [BannedPatternScanner].
   BannedPatternScanner(
     this.patterns, {
     this.action = GuardAction.block,

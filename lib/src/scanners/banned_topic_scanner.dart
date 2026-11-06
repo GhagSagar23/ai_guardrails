@@ -21,6 +21,7 @@ class BannedTopicScanner implements Scanner {
 
   final List<RegExp> _patterns;
 
+  /// Creates a [BannedTopicScanner].
   BannedTopicScanner(
     this.topics, {
     this.action = GuardAction.block,

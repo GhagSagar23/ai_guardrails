@@ -105,8 +105,8 @@ if (outcome.blocked) {
 }
 ```
 
-See [`example/ai_guardrails_example.dart`](example/ai_guardrails_example.dart) for a
-full runnable example. Provider integration: [docs/llm-providers.md](docs/llm-providers.md).
+See `example/ai_guardrails_example.dart` for a
+full runnable example. Provider integration: `docs/llm-providers.md`.
 
 ## Scanners
 
@@ -148,7 +148,7 @@ Findings are dotted and predictable — `pii.email`, `secret.aws_access_key`,
 | `ReadingLevelScanner` | ❌ | ✅ | warn | reading grade outside bounds (Flesch-Kincaid + Coleman-Liau) |
 | `EmbeddingGroundingScanner` | ❌ | ✅ | warn | embedding cosine similarity + optional NLI entailment |
 
-Per-scanner configuration and code examples: **[docs/scanners.md](docs/scanners.md)**.
+Per-scanner configuration and code examples: **`docs/scanners.md`**.
 
 ## Performance
 
@@ -164,8 +164,8 @@ Per-scanner configuration and code examples: **[docs/scanners.md](docs/scanners.
 | PiiScanner (redact) | 404 µs |
 | **Full pipeline (7 scanners)** | **558 µs** |
 
-~1.25 KB prompt, Apple Silicon. Full methodology: [BENCHMARK.md](BENCHMARK.md) ·
-ReDoS analysis: [PERFORMANCE-AUDIT.md](PERFORMANCE-AUDIT.md).
+~1.25 KB prompt, Apple Silicon. Full methodology: `BENCHMARK.md` ·
+ReDoS analysis: `PERFORMANCE-AUDIT.md`.
 
 ## Privacy & telemetry
 
@@ -184,27 +184,27 @@ callback.
 
 | Topic | Link |
 | --- | --- |
-| Scanner details & examples | [docs/scanners.md](docs/scanners.md) |
-| LLM provider integration | [docs/llm-providers.md](docs/llm-providers.md) |
-| PII redaction & round-trip | [docs/pii-round-trip.md](docs/pii-round-trip.md) |
-| Streaming | [docs/streaming.md](docs/streaming.md) |
-| Multi-turn sessions | [docs/multi-turn.md](docs/multi-turn.md) |
-| Custom scanners | [docs/custom-scanners.md](docs/custom-scanners.md) |
-| Accuracy & limitations | [docs/accuracy.md](docs/accuracy.md) |
-| FAQ | [docs/faq.md](docs/faq.md) |
+| Scanner details & examples | `docs/scanners.md` |
+| LLM provider integration | `docs/llm-providers.md` |
+| PII redaction & round-trip | `docs/pii-round-trip.md` |
+| Streaming | `docs/streaming.md` |
+| Multi-turn sessions | `docs/multi-turn.md` |
+| Custom scanners | `docs/custom-scanners.md` |
+| Accuracy & limitations | `docs/accuracy.md` |
+| FAQ | `docs/faq.md` |
 | API reference | [pub.dev docs](https://pub.dev/documentation/ai_guardrails/latest/) |
-| Benchmarks | [BENCHMARK.md](BENCHMARK.md) |
-| Performance audit | [PERFORMANCE-AUDIT.md](PERFORMANCE-AUDIT.md) |
-| Roadmap | [ROADMAP.md](ROADMAP.md) |
-| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Security | [SECURITY.md](SECURITY.md) |
+| Benchmarks | `BENCHMARK.md` |
+| Performance audit | `PERFORMANCE-AUDIT.md` |
+| Roadmap | `ROADMAP.md` |
+| Contributing | `CONTRIBUTING.md` |
+| Security | `SECURITY.md` |
 
 ## Contributing
 
 Contributions are **issue-first**:
 [open a GitHub issue](https://github.com/GhagSagar23/ai_guardrails/issues) before
-sending a PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
+sending a PR. See `CONTRIBUTING.md`.
 
 ## License
 
-[Apache-2.0](LICENSE) © Kryonex Labs Private Limited
+Apache-2.0 (`LICENSE`) © Kryonex Labs Private Limited

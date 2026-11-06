@@ -7,9 +7,16 @@ import 'scanner.dart';
 /// For cross-isolate or persistent caching, implement this interface
 /// with your own storage layer.
 abstract class CacheBackend {
+  /// Returns the cached value for [key], or null if absent or expired.
   Future<Object?> get(String key);
+
+  /// Stores [value] under [key] for [ttl].
   Future<void> set(String key, Object value, Duration ttl);
+
+  /// Removes the entry for [key].
   Future<void> remove(String key);
+
+  /// Removes all entries.
   Future<void> clear();
 }
 
@@ -22,9 +29,11 @@ class _Entry {
 
 /// In-memory [CacheBackend] with LRU eviction and TTL expiry.
 class InMemoryCache implements CacheBackend {
+  /// Maximum number of entries before LRU eviction.
   final int maxEntries;
   final _store = <String, _Entry>{};
 
+  /// Creates a [InMemoryCache].
   InMemoryCache({this.maxEntries = 1000});
 
   @override
@@ -51,6 +60,7 @@ class InMemoryCache implements CacheBackend {
   @override
   Future<void> clear() async => _store.clear();
 
+  /// The number of entries currently stored.
   int get length => _store.length;
 }
 
@@ -66,11 +76,15 @@ class InMemoryCache implements CacheBackend {
 /// print(cache.hitRate); // 0.0..1.0
 /// ```
 class GuardCache {
+  /// The storage backend.
   final CacheBackend backend;
+
+  /// Default time-to-live for entries.
   final Duration defaultTtl;
   int _hits = 0;
   int _misses = 0;
 
+  /// Creates a [GuardCache].
   GuardCache({
     CacheBackend? backend,
     this.defaultTtl = const Duration(minutes: 5),
@@ -104,12 +118,17 @@ class GuardCache {
         return result;
       };
 
+  /// Number of cache hits.
   int get hits => _hits;
+
+  /// Number of cache misses.
   int get misses => _misses;
 
+  /// Fraction of lookups that were hits.
   double get hitRate =>
       (_hits + _misses) == 0 ? 0.0 : _hits / (_hits + _misses);
 
+  /// Removes all entries.
   Future<void> clear() async {
     await backend.clear();
     _hits = 0;

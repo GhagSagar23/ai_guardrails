@@ -15,6 +15,7 @@ class RepetitionScanner implements Scanner {
   /// What to do when repetition exceeds [threshold].
   final GuardAction action;
 
+  /// Creates a [RepetitionScanner].
   RepetitionScanner({
     this.ngramSize = 3,
     this.threshold = 0.3,

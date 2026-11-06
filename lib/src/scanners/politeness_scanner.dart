@@ -1,7 +1,16 @@
 import '../scanner.dart';
 
 /// Tone register for [PolitenessScanner].
-enum ToneRegister { formal, neutral, casual }
+enum ToneRegister {
+  /// Formal tone.
+  formal,
+
+  /// Neutral tone.
+  neutral,
+
+  /// Casual tone.
+  casual,
+}
 
 /// Detects tone/register mismatches in generated text.
 ///
@@ -9,9 +18,13 @@ enum ToneRegister { formal, neutral, casual }
 /// indicate casual; formal markers indicate formal. Fires when the detected
 /// register doesn't match [targetRegister].
 class PolitenessScanner implements Scanner {
+  /// The desired tone register.
   final ToneRegister targetRegister;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [PolitenessScanner].
   PolitenessScanner({
     required this.targetRegister,
     this.action = GuardAction.warn,

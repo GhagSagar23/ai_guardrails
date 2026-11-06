@@ -4,11 +4,19 @@ import '../scanner.dart';
 ///
 /// Useful for classification tasks where the LLM must output one of N labels.
 class ChoicesValidator implements Scanner {
+  /// The allowed values.
   final Set<String> choices;
+
+  /// Whether matching is case sensitive.
   final bool caseSensitive;
+
+  /// Whether to trim whitespace before checking.
   final bool trim;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [ChoicesValidator].
   ChoicesValidator(
     Iterable<String> choices, {
     this.caseSensitive = false,

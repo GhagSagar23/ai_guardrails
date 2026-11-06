@@ -134,8 +134,10 @@ class GroundingScanner implements Scanner {
   /// somewhere in the context.
   final double threshold;
 
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [GroundingScanner].
   GroundingScanner({
     required this.context,
     this.threshold = 0.5,

@@ -15,6 +15,7 @@ class InjectionSignal {
   /// Alternative regexes; matching any one fires the group.
   final List<RegExp> patterns;
 
+  /// Creates a [InjectionSignal].
   const InjectionSignal(this.name, this.weight, this.patterns);
 }
 
@@ -73,6 +74,7 @@ class PromptInjectionScanner implements Scanner {
   /// What to do when the score meets [threshold].
   final GuardAction action;
 
+  /// Creates a [PromptInjectionScanner].
   const PromptInjectionScanner({
     this.threshold = 0.5,
     this.action = GuardAction.block,

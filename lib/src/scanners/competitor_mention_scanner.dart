@@ -6,12 +6,18 @@ import '../scanner.dart';
 /// Similar mechanics to [BannedTopicScanner] but semantically distinct —
 /// for brand-safety use cases where competitor mentions must be flagged.
 class CompetitorMentionScanner implements Scanner {
+  /// Competitor names to detect.
   final List<String> competitors;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
+
+  /// Whether matching is case sensitive.
   final bool caseSensitive;
 
   final List<RegExp> _patterns;
 
+  /// Creates a [CompetitorMentionScanner].
   CompetitorMentionScanner(
     this.competitors, {
     this.action = GuardAction.block,

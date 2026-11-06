@@ -1,13 +1,32 @@
 import '../scanner.dart';
 
 /// Categories of dangerous code patterns.
-enum CodeCategory { shell, sql, injection, filesystem }
+enum CodeCategory {
+  /// Shell command execution.
+  shell,
+
+  /// SQL statements.
+  sql,
+
+  /// Code injection constructs.
+  injection,
+
+  /// Filesystem access.
+  filesystem,
+}
 
 /// Pattern group: a regex and the finding type it produces.
 class CodePattern {
+  /// The category this belongs to.
   final CodeCategory category;
+
+  /// The finding type reported on a match.
   final String type;
+
+  /// The regular expression to match.
   final RegExp regex;
+
+  /// Creates a [CodePattern].
   const CodePattern(this.category, this.type, this.regex);
 }
 
@@ -16,11 +35,13 @@ class CodePattern {
 ///
 /// For code-generation LLM apps where the output might be executed.
 class CodeExecutionScanner implements Scanner {
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   /// Categories to check. Default: all.
   final Set<CodeCategory> categories;
 
+  /// Creates a [CodeExecutionScanner].
   CodeExecutionScanner({
     this.action = GuardAction.block,
     this.categories = const {
@@ -37,6 +58,7 @@ class CodeExecutionScanner implements Scanner {
   @override
   Set<ScanStage> get stages => const {ScanStage.output};
 
+  /// The patterns checked by this scanner.
   static final patterns = <CodePattern>[
     // Shell
     CodePattern(CodeCategory.shell, 'code_exec.shell',

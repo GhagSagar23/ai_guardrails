@@ -6,12 +6,22 @@ import '../scanner.dart';
 /// String length mode checks [minLength]/[maxLength] on the raw text.
 /// Both can be combined.
 class RangeValidator implements Scanner {
+  /// Minimum numeric value.
   final double? min;
+
+  /// Maximum numeric value.
   final double? max;
+
+  /// Minimum length.
   final int? minLength;
+
+  /// Maximum length.
   final int? maxLength;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [RangeValidator].
   RangeValidator({
     this.min,
     this.max,

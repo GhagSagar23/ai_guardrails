@@ -7,10 +7,16 @@ import '../scanner.dart';
 ///
 /// At least one of [allowedTopics] or [forbiddenTopics] must be non-empty.
 class TopicSafetyScanner extends AsyncScanner with LlmDependent {
+  /// Topics that are permitted.
   final List<String> allowedTopics;
+
+  /// Topics that are forbidden.
   final List<String> forbiddenTopics;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [TopicSafetyScanner].
   TopicSafetyScanner({
     this.allowedTopics = const [],
     this.forbiddenTopics = const [],

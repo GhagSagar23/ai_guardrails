@@ -10,10 +10,16 @@ import '../scanner.dart';
 /// Create a new instance per request (the [prompt] changes each turn).
 /// Output-stage only.
 class HallucinationScanner extends AsyncScanner with LlmDependent {
+  /// The prompt used to sample responses.
   final String prompt;
+
+  /// Number of samples to draw.
   final int sampleCount;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [HallucinationScanner].
   HallucinationScanner({
     required this.prompt,
     this.sampleCount = 3,

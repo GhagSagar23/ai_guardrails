@@ -5,10 +5,16 @@ import '../scanner.dart';
 /// Rejects tags not in [allowedTags] and strips dangerous attributes
 /// (event handlers, javascript: URIs). Pure regex-based — no HTML parser dep.
 class HtmlValidator implements Scanner {
+  /// HTML tags permitted.
   final Set<String> allowedTags;
+
+  /// HTML attributes permitted.
   final Set<String> allowedAttributes;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Tags allowed by default.
   static const defaultTags = {
     'p', 'br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li',
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'blockquote',
@@ -16,6 +22,7 @@ class HtmlValidator implements Scanner {
     'hr', 'dl', 'dt', 'dd', 'sub', 'sup', 'mark', 'small', //
   };
 
+  /// Attributes allowed by default.
   static const defaultAttributes = {
     'href', 'src', 'alt', 'title', 'class', 'id', 'width', 'height',
     'colspan', 'rowspan', 'target', 'rel', //
@@ -31,6 +38,7 @@ class HtmlValidator implements Scanner {
     caseSensitive: false,
   );
 
+  /// Creates a [HtmlValidator].
   HtmlValidator({
     Set<String>? allowedTags,
     Set<String>? allowedAttributes,

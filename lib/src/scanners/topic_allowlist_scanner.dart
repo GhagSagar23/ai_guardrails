@@ -6,12 +6,18 @@ import '../scanner.dart';
 /// allowlist. In keyword mode (default), scans for word-boundary matches.
 /// In LLM-assisted mode, delegates semantic judgment to [LlmCallback].
 class TopicAllowlistScanner extends AsyncScanner with LlmDependent {
+  /// Topics that are permitted.
   final List<String> allowedTopics;
+
+  /// Whether to use the LLM for classification.
   final bool useLlm;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   final List<RegExp> _patterns;
 
+  /// Creates a [TopicAllowlistScanner].
   TopicAllowlistScanner({
     required this.allowedTopics,
     this.useLlm = false,

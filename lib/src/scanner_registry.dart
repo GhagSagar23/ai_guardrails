@@ -45,10 +45,12 @@ typedef ScannerFactory = ScannerBase Function(Map<String, dynamic> config);
 /// final scanner = ScannerRegistry.instance.build('my_scanner');
 /// ```
 class ScannerRegistry {
+  /// The shared registry with built-in scanners registered.
   static final instance = ScannerRegistry._withBuiltins();
 
   final _factories = <String, ScannerFactory>{};
 
+  /// Creates a [ScannerRegistry].
   ScannerRegistry();
 
   ScannerRegistry._withBuiltins() {

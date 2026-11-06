@@ -2,11 +2,19 @@ import 'ai_guard.dart';
 
 /// Result of probing a single scanner with adversarial inputs.
 class ProbeResult {
+  /// The scanner name.
   final String scanner;
+
+  /// Number of probes run.
   final int totalProbes;
+
+  /// Number of probes that evaded detection.
   final int bypassed;
+
+  /// The probe inputs that evaded detection.
   final List<String> bypassedInputs;
 
+  /// Creates a [ProbeResult].
   const ProbeResult({
     required this.scanner,
     required this.totalProbes,
@@ -14,20 +22,34 @@ class ProbeResult {
     this.bypassedInputs = const [],
   });
 
+  /// Number of probes that were detected.
   int get caught => totalProbes - bypassed;
+
+  /// Fraction of probes that evaded detection.
   double get bypassRate => totalProbes == 0 ? 0.0 : bypassed / totalProbes;
+
+  /// Fraction of probes that were detected.
   double get catchRate => 1.0 - bypassRate;
 }
 
 /// Full probe report across all scanners in a guard.
 class ProbeReport {
+  /// Per-scanner results.
   final List<ProbeResult> scanners;
+
+  /// Time taken to run the probes.
   final Duration elapsed;
 
+  /// Creates a [ProbeReport].
   const ProbeReport({required this.scanners, required this.elapsed});
 
+  /// Number of probes run.
   int get totalProbes => scanners.fold(0, (s, r) => s + r.totalProbes);
+
+  /// Total probes that evaded detection across scanners.
   int get totalBypassed => scanners.fold(0, (s, r) => s + r.bypassed);
+
+  /// Total probes detected across scanners.
   int get totalCaught => totalProbes - totalBypassed;
 
   /// 0.0 (everything bypassed) to 1.0 (nothing bypassed).
@@ -48,10 +70,13 @@ class ProbeReport {
 /// }
 /// ```
 class GuardProbe {
+  /// The guard being used.
   final AiGuard guard;
 
+  /// Creates a [GuardProbe].
   const GuardProbe(this.guard);
 
+  /// Runs the evaluation and returns the result.
   Future<ProbeReport> run() async {
     final sw = Stopwatch()..start();
     final results = <ProbeResult>[];

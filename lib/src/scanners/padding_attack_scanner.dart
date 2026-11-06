@@ -26,8 +26,10 @@ class PaddingAttackScanner implements Scanner {
   /// Default 5.
   final int minRunLength;
 
+  /// The action taken when a violation is found.
   final GuardAction action;
 
+  /// Creates a [PaddingAttackScanner].
   PaddingAttackScanner({
     this.entropyFloor = 3.0,
     this.maxRunRatio = 0.1,

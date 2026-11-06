@@ -6,9 +6,16 @@ import '../scanner.dart';
 /// [allowedProtocols], domain in [allowedDomains] (if set), no userinfo
 /// (credentials) in the URI.
 class UrlFormatValidator implements Scanner {
+  /// URL protocols permitted.
   final Set<String> allowedProtocols;
+
+  /// Domains permitted, or null for any.
   final Set<String>? allowedDomains;
+
+  /// Whether URLs with embedded credentials are blocked.
   final bool blockCredentials;
+
+  /// The action taken when a violation is found.
   final GuardAction action;
 
   static final _urlPattern = RegExp(
@@ -16,6 +23,7 @@ class UrlFormatValidator implements Scanner {
     caseSensitive: false,
   );
 
+  /// Creates a [UrlFormatValidator].
   UrlFormatValidator({
     Set<String>? allowedProtocols,
     this.allowedDomains,

@@ -3,12 +3,22 @@ import 'scanner.dart';
 
 /// A labeled test case for benchmarking scanner accuracy.
 class BenchmarkCase {
+  /// The text under test.
   final String text;
+
+  /// The scan stage this applies to.
   final ScanStage stage;
+
+  /// Whether the guard is expected to block this text.
   final bool expectBlock;
+
+  /// Finding types expected to be reported.
   final Set<String> expectedTypes;
+
+  /// The category this belongs to.
   final String? category;
 
+  /// Creates a [BenchmarkCase].
   const BenchmarkCase({
     required this.text,
     this.stage = ScanStage.input,
@@ -17,6 +27,7 @@ class BenchmarkCase {
     this.category,
   });
 
+  /// Creates a [BenchmarkCase] from JSON.
   factory BenchmarkCase.fromJson(Map<String, dynamic> json) => BenchmarkCase(
         text: json['text'] as String,
         stage: (json['stage'] as String?) == 'output'
@@ -32,10 +43,13 @@ class BenchmarkCase {
 
 /// A collection of labeled test cases.
 class BenchmarkCorpus {
+  /// The cases in this collection.
   final List<BenchmarkCase> cases;
 
+  /// Creates a [BenchmarkCorpus].
   const BenchmarkCorpus(this.cases);
 
+  /// Creates a [BenchmarkCorpus] from a JSON list.
   factory BenchmarkCorpus.fromJsonList(List<dynamic> data) => BenchmarkCorpus(
         data
             .map((e) => BenchmarkCase.fromJson(e as Map<String, dynamic>))
@@ -45,11 +59,19 @@ class BenchmarkCorpus {
 
 /// Accuracy metrics for a single scanner or the full pipeline.
 class AccuracyMetrics {
+  /// Count of harmful inputs correctly flagged.
   final int truePositives;
+
+  /// Count of benign inputs wrongly flagged.
   final int falsePositives;
+
+  /// Count of benign inputs correctly passed.
   final int trueNegatives;
+
+  /// Count of harmful inputs wrongly passed.
   final int falseNegatives;
 
+  /// Creates a [AccuracyMetrics].
   const AccuracyMetrics({
     required this.truePositives,
     required this.falsePositives,
@@ -57,17 +79,21 @@ class AccuracyMetrics {
     required this.falseNegatives,
   });
 
+  /// Total number of cases evaluated.
   int get total =>
       truePositives + falsePositives + trueNegatives + falseNegatives;
 
+  /// Fraction of flagged cases that were truly harmful.
   double get precision => (truePositives + falsePositives) == 0
       ? 1.0
       : truePositives / (truePositives + falsePositives);
 
+  /// Fraction of harmful cases that were flagged.
   double get recall => (truePositives + falseNegatives) == 0
       ? 1.0
       : truePositives / (truePositives + falseNegatives);
 
+  /// Harmonic mean of [precision] and [recall].
   double get f1 {
     final p = precision;
     final r = recall;
@@ -82,6 +108,7 @@ class AccuracyMetrics {
 
 /// Per-scanner breakdown in a benchmark report.
 class ScannerBenchmark {
+  /// The name.
   final String name;
 
   /// How many cases this scanner contributed findings to.
@@ -90,6 +117,7 @@ class ScannerBenchmark {
   /// Finding types this scanner produced, with counts.
   final Map<String, int> findingTypeCounts;
 
+  /// Creates a [ScannerBenchmark].
   const ScannerBenchmark({
     required this.name,
     required this.casesWithFindings,
@@ -99,18 +127,28 @@ class ScannerBenchmark {
 
 /// Per-category breakdown in a benchmark report.
 class CategoryBenchmark {
+  /// The category this belongs to.
   final String category;
+
+  /// Accuracy metrics for this group.
   final AccuracyMetrics metrics;
 
+  /// Creates a [CategoryBenchmark].
   const CategoryBenchmark({required this.category, required this.metrics});
 }
 
 /// Full benchmark report.
 class BenchmarkReport {
+  /// Accuracy metrics across all cases.
   final AccuracyMetrics overall;
+
+  /// Per-scanner results.
   final List<ScannerBenchmark> scanners;
+
+  /// Per-category results.
   final List<CategoryBenchmark> categories;
 
+  /// Creates a [BenchmarkReport].
   const BenchmarkReport({
     required this.overall,
     required this.scanners,
@@ -126,10 +164,13 @@ class BenchmarkReport {
 /// print(report.overall); // precision, recall, F1
 /// ```
 class GuardBenchmark {
+  /// The guard being used.
   final AiGuard guard;
 
+  /// Creates a [GuardBenchmark].
   const GuardBenchmark(this.guard);
 
+  /// Runs the evaluation and returns the result.
   Future<BenchmarkReport> run(BenchmarkCorpus corpus) async {
     var tp = 0, fp = 0, tn = 0, fn = 0;
     final scannerFindings = <String, _ScannerAccum>{};
