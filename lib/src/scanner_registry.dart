@@ -31,6 +31,7 @@ import 'scanners/bias_scanner.dart';
 import 'scanners/politeness_scanner.dart';
 import 'scanners/reading_level_scanner.dart';
 import 'scanners/embedding_grounding_scanner.dart';
+import 'scanners/semantic_injection_scanner.dart';
 
 /// Creates a [ScannerBase] from a JSON config map.
 typedef ScannerFactory = ScannerBase Function(Map<String, dynamic> config);
@@ -122,6 +123,7 @@ class ScannerRegistry {
     register('politeness', _buildPoliteness);
     register('reading_level', _buildReadingLevel);
     register('embedding_grounding', _buildEmbeddingGrounding);
+    register('semantic_injection', _buildSemanticInjection);
   }
 
   // -- Built-in factories --
@@ -363,6 +365,12 @@ class ScannerRegistry {
             (cfg['sourceChunks'] as List?)?.cast<String>() ?? const [],
         threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.7,
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
+      );
+
+  static ScannerBase _buildSemanticInjection(Map<String, dynamic> cfg) =>
+      SemanticInjectionScanner(
+        threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.5,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
       );
 
   static Set<PiiLocale> _parseLocales(dynamic v) {
