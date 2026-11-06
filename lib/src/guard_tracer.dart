@@ -87,3 +87,79 @@ class GuardSemantics {
   /// Tool name for tool-output scanning.
   static const toolName = 'guardrail.tool.name';
 }
+
+/// In-memory tracer for debugging and testing.
+///
+/// Records all spans in [spans]. Use [clear] to reset between tests.
+class InMemoryTracer implements GuardTracer {
+  /// Root spans, in start order.
+  final spans = <InMemorySpan>[];
+
+  @override
+  GuardSpan startSpan(String name, {Map<String, Object>? attributes}) {
+    final span = InMemorySpan(name, attributes: attributes);
+    spans.add(span);
+    return span;
+  }
+
+  /// Remove all recorded spans.
+  void clear() => spans.clear();
+
+  /// All spans flattened (root + children), depth-first.
+  List<InMemorySpan> get allSpans {
+    final result = <InMemorySpan>[];
+    void walk(InMemorySpan s) {
+      result.add(s);
+      s.children.forEach(walk);
+    }
+
+    spans.forEach(walk);
+    return result;
+  }
+
+  /// Find all spans matching [name].
+  List<InMemorySpan> findByName(String name) =>
+      allSpans.where((s) => s.name == name).toList();
+}
+
+/// In-memory span for debugging and testing.
+class InMemorySpan implements GuardSpan {
+  /// Span name.
+  final String name;
+
+  /// Attributes set at start or via [setAttribute].
+  final Map<String, Object> attributes;
+
+  /// Child spans, in start order.
+  final List<InMemorySpan> children = [];
+
+  /// Errors passed to [recordError].
+  final List<Object> errors = [];
+
+  /// Whether [end] has been called.
+  bool ended = false;
+
+  /// Creates a span named [name] with optional initial [attributes].
+  InMemorySpan(this.name, {Map<String, Object>? attributes})
+      : attributes = {...?attributes};
+
+  @override
+  void setAttribute(String key, Object value) => attributes[key] = value;
+
+  @override
+  GuardSpan startChild(String name, {Map<String, Object>? attributes}) {
+    final child = InMemorySpan(name, attributes: attributes);
+    children.add(child);
+    return child;
+  }
+
+  @override
+  void recordError(Object error, {StackTrace? stackTrace}) => errors.add(error);
+
+  @override
+  void end() => ended = true;
+
+  @override
+  String toString() => 'InMemorySpan($name, ended=$ended, '
+      'children=${children.length}, attrs=$attributes)';
+}
