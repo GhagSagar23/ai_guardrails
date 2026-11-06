@@ -1,44 +1,6 @@
 import 'package:ai_guardrails/ai_guardrails.dart';
 import 'package:test/test.dart';
 
-class MockSpan implements GuardSpan {
-  final String name;
-  final Map<String, Object> attributes;
-  final List<MockSpan> children = [];
-  final List<Object> errors = [];
-  bool ended = false;
-
-  MockSpan(this.name, {Map<String, Object>? attributes})
-      : attributes = {...?attributes};
-
-  @override
-  void setAttribute(String key, Object value) => attributes[key] = value;
-
-  @override
-  GuardSpan startChild(String name, {Map<String, Object>? attributes}) {
-    final child = MockSpan(name, attributes: attributes);
-    children.add(child);
-    return child;
-  }
-
-  @override
-  void recordError(Object error, {StackTrace? stackTrace}) => errors.add(error);
-
-  @override
-  void end() => ended = true;
-}
-
-class MockTracer implements GuardTracer {
-  final List<MockSpan> spans = [];
-
-  @override
-  GuardSpan startSpan(String name, {Map<String, Object>? attributes}) {
-    final span = MockSpan(name, attributes: attributes);
-    spans.add(span);
-    return span;
-  }
-}
-
 class _BlockScanner extends Scanner {
   @override
   String get name => 'blocker';
@@ -93,7 +55,7 @@ void main() {
     });
 
     test('run creates root span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(inputScanners: [_PassScanner()], tracer: tracer);
       await guard.run(input: 'hello', llmCall: (s) async => 'reply');
       expect(tracer.spans, hasLength(1));
@@ -102,7 +64,7 @@ void main() {
     });
 
     test('run creates input and output stage child spans', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         outputScanners: [_PassScanner()],
@@ -118,7 +80,7 @@ void main() {
     });
 
     test('scanner child spans with attributes', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         tracer: tracer,
@@ -135,7 +97,7 @@ void main() {
     });
 
     test('blocked sets attributes on root span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_BlockScanner()],
         tracer: tracer,
@@ -150,7 +112,7 @@ void main() {
     });
 
     test('blocked scanner records findings in scan span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_BlockScanner()],
         tracer: tracer,
@@ -163,7 +125,7 @@ void main() {
     });
 
     test('scanner error records on span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_ThrowScanner()],
         failClosed: true,
@@ -176,7 +138,7 @@ void main() {
     });
 
     test('scanner error with failClosed=false skips', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_ThrowScanner()],
         failClosed: false,
@@ -191,7 +153,7 @@ void main() {
     });
 
     test('scanInput creates root stage span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         tracer: tracer,
@@ -202,7 +164,7 @@ void main() {
     });
 
     test('scanOutput creates root stage span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         outputScanners: [_PassScanner()],
         tracer: tracer,
@@ -213,7 +175,7 @@ void main() {
     });
 
     test('runToolOutputStage creates spans per tool', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         tracer: tracer,
@@ -226,7 +188,7 @@ void main() {
     });
 
     test('runRetrievalStage creates spans per chunk', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         tracer: tracer,
@@ -236,7 +198,7 @@ void main() {
     });
 
     test('success path sets blocked=false', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         outputScanners: [_PassScanner()],
@@ -249,7 +211,7 @@ void main() {
     });
 
     test('output blocker ends root span', () async {
-      final tracer = MockTracer();
+      final tracer = InMemoryTracer();
       final guard = AiGuard(
         inputScanners: [_PassScanner()],
         outputScanners: [_BlockScanner()],
@@ -262,6 +224,39 @@ void main() {
       final root = tracer.spans.first;
       expect(root.attributes[GuardSemantics.blocked], true);
       expect(root.ended, true);
+    });
+  });
+
+  group('InMemoryTracer', () {
+    test('allSpans flattens tree depth-first', () {
+      final t = InMemoryTracer();
+      final a = t.startSpan('a');
+      final a1 = a.startChild('a1');
+      a1.startChild('a1x');
+      a.startChild('a2');
+      t.startSpan('b');
+      expect(t.allSpans.map((s) => s.name), ['a', 'a1', 'a1x', 'a2', 'b']);
+    });
+
+    test('findByName filters', () {
+      final t = InMemoryTracer();
+      t.startSpan('x').startChild('y');
+      t.startSpan('y');
+      expect(t.findByName('y'), hasLength(2));
+      expect(t.findByName('nope'), isEmpty);
+    });
+
+    test('clear resets', () {
+      final t = InMemoryTracer()..startSpan('x');
+      t.clear();
+      expect(t.spans, isEmpty);
+      expect(t.allSpans, isEmpty);
+    });
+
+    test('InMemorySpan.toString is readable', () {
+      final s = InMemorySpan('foo', attributes: {'k': 1})..end();
+      expect(s.toString(),
+          'InMemorySpan(foo, ended=true, children=0, attrs={k: 1})');
     });
   });
 }

@@ -78,8 +78,18 @@ void main() {
             'url',
             'code_exec',
             'hallucination',
-            'policy_rule'
+            'policy_rule',
+            'semantic_injection'
           ]));
+    });
+
+    test('semantic_injection has message in all locales', () {
+      expect(GuardMessages.supportedScanners, contains('semantic_injection'));
+      for (final locale in GuardMessages.availableLocales) {
+        expect(msgs.message('semantic_injection', locale: locale),
+            isNot('A safety issue was detected.'),
+            reason: 'locale $locale missing semantic_injection');
+      }
     });
 
     test('all locales have pii message', () {
