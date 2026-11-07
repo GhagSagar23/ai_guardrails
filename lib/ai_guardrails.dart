@@ -46,6 +46,8 @@ export 'src/scanners/choices_validator.dart';
 export 'src/scanners/topic_allowlist_scanner.dart';
 export 'src/scanners/competitor_mention_scanner.dart';
 export 'src/scanners/bias_scanner.dart';
+export 'src/scanners/toxicity_scanner.dart';
+export 'src/scanners/relevance_scanner.dart';
 export 'src/scanners/politeness_scanner.dart';
 export 'src/scanners/reading_level_scanner.dart';
 export 'src/scanners/embedding_grounding_scanner.dart';
