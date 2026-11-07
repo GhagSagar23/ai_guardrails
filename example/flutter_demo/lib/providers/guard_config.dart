@@ -2,15 +2,37 @@ import 'package:ai_guardrails/ai_guardrails.dart';
 
 /// Pre-configured [AiGuard] instances for the demo app's Chat and RAG tabs.
 class GuardConfig {
+  /// Optional Chat-tab scanners the user can toggle, keyed by scanner name.
+  static const optionalScanners = <String, String>{
+    'toxicity': 'Toxicity',
+    'relevance': 'Relevance',
+    'language_detection': 'Language (en/es/fr/de)',
+  };
+
+  /// Languages accepted when `language_detection` is enabled.
+  static const allowedLanguages = {'en', 'es', 'fr', 'de'};
+
   /// Chat tab: full input sanitisation + output quality checks.
-  static AiGuard chatGuard() => AiGuard(
+  ///
+  /// [enabled] holds keys of [optionalScanners] to switch on. [relevance] is
+  /// the caller-owned scanner whose `referenceText` is set to each prompt.
+  static AiGuard chatGuard({
+    Set<String> enabled = const {},
+    RelevanceScanner? relevance,
+  }) =>
+      AiGuard(
         inputScanners: [
           PiiScanner(action: GuardAction.redact),
           SecretScanner(),
           PromptInjectionScanner(threshold: 0.5),
           InvisibleTextScanner(),
+          if (enabled.contains('toxicity')) ToxicityScanner(),
+          if (enabled.contains('language_detection'))
+            LanguageDetectionScanner(allow: allowedLanguages),
         ],
         outputScanners: [
+          if (enabled.contains('toxicity')) ToxicityScanner(),
+          if (enabled.contains('relevance') && relevance != null) relevance,
           CompetitorMentionScanner(
             ['Acme', 'Globex'],
             action: GuardAction.warn,
@@ -26,6 +48,9 @@ class GuardConfig {
           'prompt_injection': OnFailAction.block,
           'secret': OnFailAction.block,
           'competitor_mention': OnFailAction.warn,
+          'toxicity': OnFailAction.block,
+          'language_detection': OnFailAction.block,
+          'relevance': OnFailAction.warn,
         },
       );
 

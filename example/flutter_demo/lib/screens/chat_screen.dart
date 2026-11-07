@@ -42,16 +42,23 @@ class _ChatScreenState extends State<ChatScreen> {
       !kIsWeb && (Platform.isMacOS || Platform.isLinux || Platform.isWindows);
 
   late final LlmProvider _llmProvider;
-  late final AiGuard _guard;
-  late final GuardedLlmCall _guardedCall;
+  final RelevanceScanner _relevance = RelevanceScanner();
+  final Set<String> _enabled = {};
+  late GuardedLlmCall _guardedCall;
 
   @override
   void initState() {
     super.initState();
     _llmProvider = widget.provider ??
         (_canUseCli ? CliLlmProvider('claude', ['-p']) : MockLlmProvider());
-    _guard = GuardConfig.chatGuard();
-    _guardedCall = GuardedLlmCall(guard: _guard, maxReasks: 2);
+    _rebuildGuard();
+  }
+
+  void _rebuildGuard() {
+    _guardedCall = GuardedLlmCall(
+      guard: GuardConfig.chatGuard(enabled: _enabled, relevance: _relevance),
+      maxReasks: 2,
+    );
   }
 
   @override
@@ -89,6 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     _scrollToBottom();
 
+    _relevance.referenceText = text;
     try {
       final outcome = await _guardedCall.call(
         input: text,
@@ -159,6 +167,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Column(
       children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              for (final e in GuardConfig.optionalScanners.entries)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(e.value),
+                    selected: _enabled.contains(e.key),
+                    onSelected: (on) => setState(() {
+                      on ? _enabled.add(e.key) : _enabled.remove(e.key);
+                      _rebuildGuard();
+                    }),
+                  ),
+                ),
+            ],
+          ),
+        ),
         Expanded(
           child: _messages.isEmpty
               ? Center(
