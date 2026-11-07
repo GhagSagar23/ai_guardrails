@@ -1,5 +1,44 @@
 # Changelog
 
+## 1.5.0
+
+- **`ToxicityScanner`** — 6-category heuristic toxicity scoring (toxicity,
+  harassment, hate, self-harm, sexual, violence). Weighted keyword matching
+  with leet-speak character class detection. Category score combines match
+  density with peak severity; overall score is the weighted average of matched
+  categories only.
+- **`RelevanceScanner`** — output-vs-input relevance scoring via Jaccard token
+  overlap (0.4), keyword recall (0.4), and length ratio (0.2). Refusal
+  patterns force score to 0.0. Output stage only.
+- **`LanguageDetectionScanner`** — trigram frequency profiles for 8 Latin-script
+  languages (en, es, fr, de, it, pt, nl, tr) plus Unicode range detection for
+  CJK, Devanagari, Cyrillic, and Hangul. Complements `LanguageScanner`
+  (script-ratio detector) by distinguishing languages that share a script.
+- **`SemanticInjectionScanner`** — adversarial stance classifier detecting
+  authority claims, instruction overrides, and role hijacking in user input.
+- **`InMemoryTracer`** — debug tracer that collects spans in-memory for
+  inspection. Useful for testing `GuardTracer` integration without an OTel
+  collector.
+- **`GuardrailsChain`** (langchain wrapper) — `BaseChain` subclass wrapping an
+  inner chain with `AiGuard` input/output scanning. PII redaction map carried
+  through output keys. Configurable throw-on-block via
+  `GuardrailsBlockedException`.
+- **`GuardrailsTool`** (langchain wrapper) — `StringTool` exposing `AiGuard`
+  to LangChain agents for on-demand text validation. Returns JSON with
+  blocked/findings/scanner_count.
+- **`ai_guardrails_anthropic`** — Anthropic SDK wrapper with `AiGuard`.
+- **Scanner hub plugin distribution** — metadata, conflict validation, and
+  example package for `ScannerPlugin` / `ScannerHub` ecosystem.
+- **Arabic locale removed** — dropped from `GuardMessages` (10 locales remain),
+  `UnicodeScript` enum, and all scanner/test references.
+- **Dartdoc coverage** — 337 public members documented.
+- **Benchmark suite** — latency benchmark (25 sync scanners × 1000 runs +
+  5-scanner pipeline) and accuracy benchmark (50-case corpus, 5 categories).
+  JSON results in `benchmark/results/`.
+- **Flutter demo polish** — toggle chips for ToxicityScanner,
+  RelevanceScanner, LanguageDetectionScanner in example chat screen.
+- 35 built-in scanners total. 893 tests.
+
 ## 1.4.2
 
 - **README restructured** — slimmed from 877 to 210 lines; scanner details,
