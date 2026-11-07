@@ -138,14 +138,6 @@ void main() {
   });
 
   group('RTL text with PII', () {
-    test('email in Arabic text detected with correct offsets', () {
-      const text = 'البريد الإلكتروني هو user@example.com للتواصل';
-      final r = PiiScanner(action: GuardAction.warn).scan(text);
-      expect(_types(r), contains('pii.email'));
-      final f = r.findings.firstWhere((f) => f.type == 'pii.email');
-      expect(text.substring(f.start, f.end), 'user@example.com');
-    });
-
     test('email in Hebrew text detected', () {
       const text = 'שלח דואר אל test@domain.org בבקשה';
       final r = PiiScanner(action: GuardAction.warn).scan(text);

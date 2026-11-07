@@ -68,13 +68,6 @@ void main() {
       expect(tight.passed, isFalse);
     });
 
-    test('Arabic script detected', () {
-      final r =
-          scanner.scan('مرحبا بالعالم هذه رسالة اختبار للتحقق من كشف اللغة');
-      expect(r.passed, isFalse);
-      expect(r.findings.first.match, 'arabic');
-    });
-
     test('scanner metadata', () {
       expect(scanner.name, 'language');
       expect(scanner.stages, {ScanStage.input, ScanStage.output});

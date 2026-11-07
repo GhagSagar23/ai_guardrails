@@ -58,3 +58,4 @@ export 'src/guard_messages.dart';
 export 'src/scanner_hub.dart';
 export 'src/scanners/semantic_injection_scanner.dart';
 export 'src/conversation_flow.dart';
+export 'src/scanners/language_detection_scanner.dart';

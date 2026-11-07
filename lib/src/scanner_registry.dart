@@ -7,6 +7,7 @@ import 'scanners/fact_check_scanner.dart';
 import 'scanners/grounding_scanner.dart';
 import 'scanners/hallucination_scanner.dart';
 import 'scanners/invisible_text_scanner.dart';
+import 'scanners/language_detection_scanner.dart';
 import 'scanners/language_scanner.dart';
 import 'scanners/pii_scanner.dart';
 import 'scanners/prompt_injection_scanner.dart';
@@ -128,6 +129,7 @@ class ScannerRegistry {
     register('reading_level', _buildReadingLevel);
     register('embedding_grounding', _buildEmbeddingGrounding);
     register('semantic_injection', _buildSemanticInjection);
+    register('language_detection', _buildLanguageDetection);
   }
 
   // -- Built-in factories --
@@ -394,6 +396,15 @@ class ScannerRegistry {
         threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.5,
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
       );
+
+  static ScannerBase _buildLanguageDetection(Map<String, dynamic> cfg) {
+    final allow = (cfg['allow'] as List?)?.cast<String>().toSet() ?? {'en'};
+    return LanguageDetectionScanner(
+      allow: allow,
+      minConfidence: (cfg['minConfidence'] as num?)?.toDouble() ?? 0.1,
+      action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+    );
+  }
 
   static Set<PiiLocale> _parseLocales(dynamic v) {
     if (v == null) return PiiLocale.values.toSet();

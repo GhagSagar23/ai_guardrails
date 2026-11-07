@@ -2,7 +2,7 @@ import 'scanner.dart';
 
 /// Localised user-facing messages per scanner/finding type.
 ///
-/// Ships with 11 locales. Configurable via [customMessages] for overrides.
+/// Ships with 10 locales. Configurable via [customMessages] for overrides.
 /// Tree-shakeable — import only if you need user-facing feedback.
 ///
 /// ```dart
@@ -48,7 +48,6 @@ class GuardMessages {
     'ja': _ja,
     'ko': _ko,
     'zh': _zh,
-    'ar': _ar,
     'hi': _hi,
   };
 
@@ -66,6 +65,7 @@ class GuardMessages {
     'repetition': 'Excessive repetition was detected.',
     'url': 'An unsafe or suspicious URL was detected.',
     'language': 'Unexpected language or script was detected.',
+    'language_detection': 'The detected language is not in the allowed set.',
     'code_exec': 'Potentially dangerous code was detected.',
     'grounding': 'The output may not be grounded in the source material.',
     'schema': 'The output does not match the required schema.',
@@ -108,6 +108,8 @@ class GuardMessages {
     'repetition': 'Se detectó repetición excesiva.',
     'url': 'Se detectó una URL insegura o sospechosa.',
     'language': 'Se detectó un idioma o escritura inesperado.',
+    'language_detection':
+        'El idioma detectado no está en el conjunto permitido.',
     'code_exec': 'Se detectó código potencialmente peligroso.',
     'grounding': 'La salida puede no estar fundamentada en el material fuente.',
     'schema': 'La salida no coincide con el esquema requerido.',
@@ -151,6 +153,7 @@ class GuardMessages {
     'repetition': 'Repetição excessiva foi detectada.',
     'url': 'Uma URL insegura ou suspeita foi detectada.',
     'language': 'Idioma ou escrita inesperado foi detectado.',
+    'language_detection': 'O idioma detectado não está no conjunto permitido.',
     'code_exec': 'Código potencialmente perigoso foi detectado.',
     'grounding': 'A saída pode não estar fundamentada no material fonte.',
     'schema': 'A saída não corresponde ao esquema exigido.',
@@ -195,6 +198,8 @@ class GuardMessages {
     'repetition': 'Une répétition excessive a été détectée.',
     'url': 'Une URL non sécurisée ou suspecte a été détectée.',
     'language': 'Une langue ou écriture inattendue a été détectée.',
+    'language_detection':
+        'La langue détectée ne fait pas partie des langues autorisées.',
     'code_exec': 'Du code potentiellement dangereux a été détecté.',
     'grounding':
         'La sortie pourrait ne pas être fondée sur le matériel source.',
@@ -240,6 +245,8 @@ class GuardMessages {
     'repetition': 'Übermäßige Wiederholung wurde erkannt.',
     'url': 'Eine unsichere oder verdächtige URL wurde erkannt.',
     'language': 'Unerwartete Sprache oder Schrift wurde erkannt.',
+    'language_detection':
+        'Die erkannte Sprache ist nicht in der erlaubten Liste.',
     'code_exec': 'Potenziell gefährlicher Code wurde erkannt.',
     'grounding':
         'Die Ausgabe ist möglicherweise nicht im Quellmaterial verankert.',
@@ -284,6 +291,7 @@ class GuardMessages {
     'repetition': 'È stata rilevata una ripetizione eccessiva.',
     'url': 'È stata rilevata una URL non sicura o sospetta.',
     'language': 'È stata rilevata una lingua o scrittura inaspettata.',
+    'language_detection': 'La lingua rilevata non è nell’insieme consentito.',
     'code_exec': 'È stato rilevato codice potenzialmente pericoloso.',
     'grounding': "L'output potrebbe non essere fondato sul materiale sorgente.",
     'schema': "L'output non corrisponde allo schema richiesto.",
@@ -326,6 +334,7 @@ class GuardMessages {
     'repetition': '過度な繰り返しが検出されました。',
     'url': '安全でないまたは疑わしいURLが検出されました。',
     'language': '予期しない言語またはスクリプトが検出されました。',
+    'language_detection': '検出された言語は許可リストに含まれていません。',
     'code_exec': '潜在的に危険なコードが検出されました。',
     'grounding': '出力がソース資料に基づいていない可能性があります。',
     'schema': '出力が必要なスキーマと一致しません。',
@@ -366,6 +375,7 @@ class GuardMessages {
     'repetition': '과도한 반복이 감지되었습니다.',
     'url': '안전하지 않거나 의심스러운 URL이 감지되었습니다.',
     'language': '예상치 못한 언어 또는 스크립트가 감지되었습니다.',
+    'language_detection': '감지된 언어가 허용 목록에 없습니다.',
     'code_exec': '잠재적으로 위험한 코드가 감지되었습니다.',
     'grounding': '출력이 소스 자료에 근거하지 않을 수 있습니다.',
     'schema': '출력이 필요한 스키마와 일치하지 않습니다.',
@@ -406,6 +416,7 @@ class GuardMessages {
     'repetition': '检测到过度重复。',
     'url': '检测到不安全或可疑的URL。',
     'language': '检测到意外的语言或文字。',
+    'language_detection': '检测到的语言不在允许列表中。',
     'code_exec': '检测到潜在危险代码。',
     'grounding': '输出可能未基于源材料。',
     'schema': '输出不符合所需的模式。',
@@ -432,46 +443,6 @@ class GuardMessages {
     'policy_rule': '触发了守护策略规则。',
   };
 
-  // -- Arabic --
-  static const _ar = <String, String>{
-    '_default': 'تم اكتشاف مشكلة أمنية.',
-    'pii': 'تم اكتشاف معلومات شخصية ومعالجتها.',
-    'secret': 'تم اكتشاف سر أو بيانات اعتماد محتملة.',
-    'prompt_injection': 'تم اكتشاف محاولة حقن محتملة.',
-    'semantic_injection': 'تم اكتشاف محاولة حقن دلالي محتملة.',
-    'invisible_text': 'تم اكتشاف أحرف مخفية أو غير مرئية.',
-    'banned_topic': 'تم اكتشاف محتوى حول موضوع مقيد.',
-    'banned_pattern': 'تم اكتشاف محتوى يطابق نمطاً مقيداً.',
-    'token_limit': 'تجاوز الإدخال الحد الأقصى المسموح به.',
-    'repetition': 'تم اكتشاف تكرار مفرط.',
-    'url': 'تم اكتشاف عنوان URL غير آمن أو مشبوه.',
-    'language': 'تم اكتشاف لغة أو نص غير متوقع.',
-    'code_exec': 'تم اكتشاف كود خطير محتمل.',
-    'grounding': 'قد لا يكون الناتج مستنداً إلى المادة المصدر.',
-    'schema': 'لا يتطابق الناتج مع المخطط المطلوب.',
-    'tool_call': 'تم اكتشاف مشكلة في التحقق من استدعاء الأداة.',
-    'padding_attack': 'تم اكتشاف هجوم حشو أو إنتروبيا.',
-    'tool_output': 'تم اكتشاف محتوى غير آمن في ناتج الأداة.',
-    'hallucination': 'قد يحتوي الناتج على محتوى مُختلق.',
-    'fact_check': 'تم اكتشاف تناقض واقعي.',
-    'topic_safety': 'انحرف الناتج عن الموضوع المسموح به.',
-    'json_validator': 'الناتج ليس JSON صالحاً.',
-    'html_validator': 'يحتوي الناتج على HTML غير مسموح به.',
-    'sql_validator': 'يحتوي الناتج على SQL غير مسموح به.',
-    'url_format_validator': 'يحتوي الناتج على تنسيق URL غير صالح.',
-    'range_validator': 'القيمة خارج النطاق المسموح به.',
-    'choices_validator': 'الناتج ليس أحد الخيارات المسموح بها.',
-    'topic_allowlist': 'المحتوى خارج المواضيع المسموح بها.',
-    'competitor_mention': 'تم اكتشاف ذكر منافس.',
-    'bias': 'تم اكتشاف تحيز محتمل.',
-    'toxicity': 'تم اكتشاف محتوى سام.',
-    'relevance': 'قد لا يكون الناتج ذا صلة بالسؤال.',
-    'politeness': 'النبرة لا تتوافق مع السجل المتوقع.',
-    'reading_level': 'مستوى القراءة لا يتوافق مع الهدف.',
-    'embedding_grounding': 'قد لا يكون الناتج مستنداً إلى المادة المصدر.',
-    'policy_rule': 'تم تفعيل قاعدة سياسة الحماية.',
-  };
-
   // -- Hindi --
   static const _hi = <String, String>{
     '_default': 'एक सुरक्षा समस्या पाई गई।',
@@ -486,6 +457,7 @@ class GuardMessages {
     'repetition': 'अत्यधिक दोहराव पाया गया।',
     'url': 'एक असुरक्षित या संदिग्ध URL पाया गया।',
     'language': 'अप्रत्याशित भाषा या लिपि पाई गई।',
+    'language_detection': 'पता लगाई गई भाषा अनुमत सूची में नहीं है।',
     'code_exec': 'संभावित खतरनाक कोड पाया गया।',
     'grounding': 'आउटपुट स्रोत सामग्री पर आधारित नहीं हो सकता है।',
     'schema': 'आउटपुट आवश्यक स्कीमा से मेल नहीं खाता।',

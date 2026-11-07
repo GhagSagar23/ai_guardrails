@@ -51,20 +51,9 @@ void main() {
       final locales = GuardMessages.availableLocales;
       expect(
           locales,
-          containsAll([
-            'en',
-            'es',
-            'pt',
-            'fr',
-            'de',
-            'it',
-            'ja',
-            'ko',
-            'zh',
-            'ar',
-            'hi'
-          ]));
-      expect(locales, hasLength(11));
+          containsAll(
+              ['en', 'es', 'pt', 'fr', 'de', 'it', 'ja', 'ko', 'zh', 'hi']));
+      expect(locales, hasLength(10));
     });
 
     test('supportedScanners includes core scanners', () {

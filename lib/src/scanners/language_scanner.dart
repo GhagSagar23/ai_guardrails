@@ -11,9 +11,6 @@ enum UnicodeScript {
   /// Greek script.
   greek,
 
-  /// Arabic script.
-  arabic,
-
   /// Devanagari script.
   devanagari,
 
@@ -118,7 +115,6 @@ class LanguageScanner implements Scanner {
     }
     if (rune >= 0x0400 && rune <= 0x04FF) return UnicodeScript.cyrillic;
     if (rune >= 0x0370 && rune <= 0x03FF) return UnicodeScript.greek;
-    if (rune >= 0x0600 && rune <= 0x06FF) return UnicodeScript.arabic;
     if (rune >= 0x0900 && rune <= 0x097F) return UnicodeScript.devanagari;
     if (rune >= 0x4E00 && rune <= 0x9FFF) return UnicodeScript.cjk;
     if (rune >= 0xAC00 && rune <= 0xD7AF) return UnicodeScript.hangul;
