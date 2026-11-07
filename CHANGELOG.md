@@ -43,7 +43,7 @@
 
 - **README restructured** — slimmed from 877 to 210 lines; scanner details,
   LLM provider integration, PII round-trip, streaming, multi-turn, custom
-  scanners, accuracy, and FAQ extracted to `docs/`.
+  scanners, accuracy, and FAQ extracted to `doc/`.
 - **Doc accuracy fixes** — privacy claims split for heuristic vs LLM-assisted
   scanners, SchemaValidator unsupported types enumerated, blocked chunk text
   leak warning, PII rehydration caveats, Unicode-domain email gap, unpublished

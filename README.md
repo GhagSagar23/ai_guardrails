@@ -106,7 +106,7 @@ if (outcome.blocked) {
 ```
 
 See `example/ai_guardrails_example.dart` for a
-full runnable example. Provider integration: `docs/llm-providers.md`.
+full runnable example. Provider integration: `doc/llm-providers.md`.
 
 ## Scanners
 
@@ -148,7 +148,7 @@ Findings are dotted and predictable — `pii.email`, `secret.aws_access_key`,
 | `ReadingLevelScanner` | ❌ | ✅ | warn | reading grade outside bounds (Flesch-Kincaid + Coleman-Liau) |
 | `EmbeddingGroundingScanner` | ❌ | ✅ | warn | embedding cosine similarity + optional NLI entailment |
 
-Per-scanner configuration and code examples: **`docs/scanners.md`**.
+Per-scanner configuration and code examples: **`doc/scanners.md`**.
 
 ## Performance
 
@@ -184,14 +184,14 @@ callback.
 
 | Topic | Link |
 | --- | --- |
-| Scanner details & examples | `docs/scanners.md` |
-| LLM provider integration | `docs/llm-providers.md` |
-| PII redaction & round-trip | `docs/pii-round-trip.md` |
-| Streaming | `docs/streaming.md` |
-| Multi-turn sessions | `docs/multi-turn.md` |
-| Custom scanners | `docs/custom-scanners.md` |
-| Accuracy & limitations | `docs/accuracy.md` |
-| FAQ | `docs/faq.md` |
+| Scanner details & examples | `doc/scanners.md` |
+| LLM provider integration | `doc/llm-providers.md` |
+| PII redaction & round-trip | `doc/pii-round-trip.md` |
+| Streaming | `doc/streaming.md` |
+| Multi-turn sessions | `doc/multi-turn.md` |
+| Custom scanners | `doc/custom-scanners.md` |
+| Accuracy & limitations | `doc/accuracy.md` |
+| FAQ | `doc/faq.md` |
 | API reference | [pub.dev docs](https://pub.dev/documentation/ai_guardrails/latest/) |
 | Benchmarks | `BENCHMARK.md` |
 | Performance audit | `PERFORMANCE-AUDIT.md` |
