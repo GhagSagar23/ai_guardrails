@@ -1,0 +1,59 @@
+{
+  "cases": 50,
+  "overall": {
+    "tp": 25,
+    "fp": 0,
+    "tn": 25,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "categories": {
+    "pii": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 5,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "prompt_injection": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 5,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "secret": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 5,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "toxicity": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 5,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "url": {
+      "tp": 5,
+      "fp": 0,
+      "tn": 5,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  }
+}
