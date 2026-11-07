@@ -52,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
     'ja': '日本語',
     'ko': '한국어',
     'zh': '中文',
-    'ar': 'العربية',
     'hi': 'हिन्दी',
   };
 
