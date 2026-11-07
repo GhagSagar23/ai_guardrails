@@ -1,0 +1,191 @@
+{
+  "runs": 1000,
+  "words": 187,
+  "dart": "3.13.0",
+  "os": "macos Version 26.6.2 (Build 25G83)",
+  "cpus": 10,
+  "results": [
+    {
+      "scanner": "pii",
+      "mean_us": 314.767,
+      "median_us": 309.0,
+      "p99_us": 396.0,
+      "ops_per_sec": 3176.9531113490298
+    },
+    {
+      "scanner": "secret",
+      "mean_us": 34.271,
+      "median_us": 8.0,
+      "p99_us": 113.0,
+      "ops_per_sec": 29179.18940211841
+    },
+    {
+      "scanner": "prompt_injection",
+      "mean_us": 106.337,
+      "median_us": 104.0,
+      "p99_us": 152.0,
+      "ops_per_sec": 9404.06443664952
+    },
+    {
+      "scanner": "banned_topic",
+      "mean_us": 3.281,
+      "median_us": 3.0,
+      "p99_us": 4.0,
+      "ops_per_sec": 304785.1264858275
+    },
+    {
+      "scanner": "banned_pattern",
+      "mean_us": 1.453,
+      "median_us": 1.0,
+      "p99_us": 8.0,
+      "ops_per_sec": 688231.2456985547
+    },
+    {
+      "scanner": "token_limit",
+      "mean_us": 49.022,
+      "median_us": 47.0,
+      "p99_us": 85.0,
+      "ops_per_sec": 20399.004528579007
+    },
+    {
+      "scanner": "invisible_text",
+      "mean_us": 36.077,
+      "median_us": 35.0,
+      "p99_us": 55.0,
+      "ops_per_sec": 27718.49100534967
+    },
+    {
+      "scanner": "repetition",
+      "mean_us": 111.571,
+      "median_us": 107.0,
+      "p99_us": 171.0,
+      "ops_per_sec": 8962.902546360614
+    },
+    {
+      "scanner": "url",
+      "mean_us": 6.6,
+      "median_us": 6.0,
+      "p99_us": 23.0,
+      "ops_per_sec": 151515.15151515152
+    },
+    {
+      "scanner": "language",
+      "mean_us": 25.056,
+      "median_us": 22.0,
+      "p99_us": 82.0,
+      "ops_per_sec": 39910.60025542784
+    },
+    {
+      "scanner": "code_exec",
+      "mean_us": 26.288,
+      "median_us": 25.0,
+      "p99_us": 53.0,
+      "ops_per_sec": 38040.170419963484
+    },
+    {
+      "scanner": "grounding",
+      "mean_us": 63.925,
+      "median_us": 61.0,
+      "p99_us": 113.0,
+      "ops_per_sec": 15643.33202972233
+    },
+    {
+      "scanner": "schema",
+      "mean_us": 3.222,
+      "median_us": 2.0,
+      "p99_us": 21.0,
+      "ops_per_sec": 310366.23215394164
+    },
+    {
+      "scanner": "tool_call",
+      "mean_us": 4.894,
+      "median_us": 4.0,
+      "p99_us": 20.0,
+      "ops_per_sec": 204331.8348998774
+    },
+    {
+      "scanner": "padding_attack",
+      "mean_us": 30.233,
+      "median_us": 29.0,
+      "p99_us": 46.0,
+      "ops_per_sec": 33076.43965203586
+    },
+    {
+      "scanner": "tool_output",
+      "mean_us": 26.609,
+      "median_us": 25.0,
+      "p99_us": 40.0,
+      "ops_per_sec": 37581.26949528355
+    },
+    {
+      "scanner": "json_validator",
+      "mean_us": 0.214,
+      "median_us": 0.0,
+      "p99_us": 1.0,
+      "ops_per_sec": 4672897.196261683
+    },
+    {
+      "scanner": "html_validator",
+      "mean_us": 16.521,
+      "median_us": 16.0,
+      "p99_us": 27.0,
+      "ops_per_sec": 60529.023666848254
+    },
+    {
+      "scanner": "sql_validator",
+      "mean_us": 47.708,
+      "median_us": 47.0,
+      "p99_us": 69.0,
+      "ops_per_sec": 20960.8451412761
+    },
+    {
+      "scanner": "url_format_validator",
+      "mean_us": 1.151,
+      "median_us": 1.0,
+      "p99_us": 2.0,
+      "ops_per_sec": 868809.7306689834
+    },
+    {
+      "scanner": "range_validator",
+      "mean_us": 0.149,
+      "median_us": 0.0,
+      "p99_us": 0.0,
+      "ops_per_sec": 6711409.395973154
+    },
+    {
+      "scanner": "choices_validator",
+      "mean_us": 2.658,
+      "median_us": 3.0,
+      "p99_us": 6.0,
+      "ops_per_sec": 376222.7238525207
+    },
+    {
+      "scanner": "competitor_mention",
+      "mean_us": 1.027,
+      "median_us": 1.0,
+      "p99_us": 1.0,
+      "ops_per_sec": 973709.8344693282
+    },
+    {
+      "scanner": "politeness",
+      "mean_us": 174.833,
+      "median_us": 171.0,
+      "p99_us": 227.0,
+      "ops_per_sec": 5719.743984259265
+    },
+    {
+      "scanner": "reading_level",
+      "mean_us": 151.589,
+      "median_us": 148.0,
+      "p99_us": 207.0,
+      "ops_per_sec": 6596.784727124
+    },
+    {
+      "scanner": "AiGuard pipeline (5 scanners)",
+      "mean_us": 441.403,
+      "median_us": 432.0,
+      "p99_us": 547.0,
+      "ops_per_sec": 2265.503406184371
+    }
+  ]
+}
