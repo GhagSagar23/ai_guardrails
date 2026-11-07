@@ -28,6 +28,8 @@ import 'scanners/choices_validator.dart';
 import 'scanners/topic_allowlist_scanner.dart';
 import 'scanners/competitor_mention_scanner.dart';
 import 'scanners/bias_scanner.dart';
+import 'scanners/toxicity_scanner.dart';
+import 'scanners/relevance_scanner.dart';
 import 'scanners/politeness_scanner.dart';
 import 'scanners/reading_level_scanner.dart';
 import 'scanners/embedding_grounding_scanner.dart';
@@ -120,6 +122,8 @@ class ScannerRegistry {
     register('topic_allowlist', _buildTopicAllowlist);
     register('competitor_mention', _buildCompetitorMention);
     register('bias', _buildBias);
+    register('toxicity', _buildToxicity);
+    register('relevance', _buildRelevance);
     register('politeness', _buildPoliteness);
     register('reading_level', _buildReadingLevel);
     register('embedding_grounding', _buildEmbeddingGrounding);
@@ -339,6 +343,24 @@ class ScannerRegistry {
         useLlm: cfg['useLlm'] as bool? ?? false,
         action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
       );
+
+  static ScannerBase _buildRelevance(Map<String, dynamic> cfg) =>
+      RelevanceScanner(
+        referenceText: cfg['referenceText'] as String?,
+        minRelevance: (cfg['minRelevance'] as num?)?.toDouble() ?? 0.3,
+        action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.warn,
+      );
+
+  static ScannerBase _buildToxicity(Map<String, dynamic> cfg) {
+    final names = (cfg['categories'] as List?)?.cast<String>();
+    return ToxicityScanner(
+      threshold: (cfg['threshold'] as num?)?.toDouble() ?? 0.7,
+      action: parseGuardAction(cfg['action'] as String?) ?? GuardAction.block,
+      categories: names == null
+          ? null
+          : ToxCategory.values.where((c) => names.contains(c.name)).toSet(),
+    );
+  }
 
   static ScannerBase _buildPoliteness(Map<String, dynamic> cfg) {
     final target = cfg['targetRegister'] as String? ?? 'neutral';
